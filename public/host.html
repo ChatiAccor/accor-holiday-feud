@@ -160,7 +160,9 @@
 
       if (!cachedQuestions) return;
 
-      s1Idx = Math.max(0, Math.min(cachedQuestions[currentDeck].stage1.length - 1, s1Idx + delta));
+      const list = (cachedQuestions[currentDeck] || cachedQuestions['day1']).stage1;
+
+      s1Idx = Math.max(0, Math.min(list.length - 1, s1Idx + delta));
 
       document.getElementById('s1-indicator').innerText = `Q ${s1Idx + 1}/7`;
 
@@ -172,7 +174,9 @@
 
       if (!cachedQuestions) return;
 
-      s2Idx = Math.max(0, Math.min(cachedQuestions[currentDeck].stage2.length - 1, s2Idx + delta));
+      const list = (cachedQuestions[currentDeck] || cachedQuestions['day1']).stage2;
+
+      s2Idx = Math.max(0, Math.min(list.length - 1, s2Idx + delta));
 
       document.getElementById('s2-indicator').innerText = `Q ${s2Idx + 1}/13`;
 
@@ -184,7 +188,9 @@
 
       if (!cachedQuestions) return;
 
-      s3Idx = Math.max(0, Math.min(cachedQuestions[currentDeck].stage3.length - 1, s3Idx + delta));
+      const list = (cachedQuestions[currentDeck] || cachedQuestions['day1']).stage3;
+
+      s3Idx = Math.max(0, Math.min(list.length - 1, s3Idx + delta));
 
       document.getElementById('s3-indicator').innerText = `Q ${s3Idx + 1}/3`;
 
@@ -246,15 +252,35 @@
 
         if (cachedQuestions) {
 
-          document.getElementById('s1-active-prompt').innerText = cachedQuestions[state.deck].stage1[state.stage1Index].prompt;
+          const deck = cachedQuestions[state.deck] || cachedQuestions['day1'];
+
+          const q = Array.isArray(deck.stage1) ? deck.stage1[state.stage1Index] : deck.stage1;
+
+          document.getElementById('s1-active-prompt').innerText = q.prompt;
 
           const listEl = document.getElementById('stage1-reveal-list');
 
           listEl.innerHTML = '';
 
-          if (state.phase === 'STAGE_1_REVEAL') {
+          if (state.phase === 'STAGE_1') {
 
-            cachedQuestions[state.deck].stage1[state.stage1Index].revealStats.forEach(s => {
+            // Show options on host screen while players vote
+
+            q.items.forEach(item => {
+
+              const d = document.createElement('div');
+
+              d.className = 'p-3 bg-slate-800/80 rounded-xl font-semibold border border-slate-700 text-slate-200 text-sm flex items-center gap-2';
+
+              d.innerHTML = `<span class="text-blue-400 font-bold">◻</span> ${item.label}`;
+
+              listEl.appendChild(d);
+
+            });
+
+          } else if (state.phase === 'STAGE_1_REVEAL') {
+
+            q.revealStats.forEach(s => {
 
               const d = document.createElement('div');
 
@@ -278,7 +304,11 @@
 
         if (cachedQuestions) {
 
-          document.getElementById('s2-active-prompt').innerText = cachedQuestions[state.deck].stage2[state.stage2Index].prompt;
+          const deck = cachedQuestions[state.deck] || cachedQuestions['day1'];
+
+          const q = Array.isArray(deck.stage2) ? deck.stage2[state.stage2Index] : deck.stage2;
+
+          document.getElementById('s2-active-prompt').innerText = q.prompt;
 
           const listEl = document.getElementById('stage2-reveal-list');
 
@@ -310,7 +340,11 @@
 
         if (cachedQuestions) {
 
-          document.getElementById('s3-active-prompt').innerText = cachedQuestions[state.deck].stage3[state.stage3Index].prompt;
+          const deck = cachedQuestions[state.deck] || cachedQuestions['day1'];
+
+          const q = Array.isArray(deck.stage3) ? deck.stage3[state.stage3Index] : deck.stage3;
+
+          document.getElementById('s3-active-prompt').innerText = q.prompt;
 
           const box = document.getElementById('stage3-votes-list');
 
