@@ -1,0 +1,70 @@
+{
+ "day1": {
+   "stage1": {
+     "prompt": "Rank these Accor hotel brands by global property count (Largest to Smallest network):",
+     "items": [
+       { "id": "b1", "label": "ibis (all styles/budget)" },
+       { "id": "b2", "label": "Mercure" },
+       { "id": "b3", "label": "Novotel" },
+       { "id": "b4", "label": "Pullman" },
+       { "id": "b5", "label": "Raffles" }
+     ],
+     "correctOrder": ["b1", "b2", "b3", "b4", "b5"],
+     "revealStats": [
+       "#1 ibis Family (~2,500+ hotels)",
+       "#2 Mercure (~950+ hotels)",
+       "#3 Novotel (~560+ hotels)",
+       "#4 Pullman (~150+ hotels)",
+       "#5 Raffles (~20+ ultra-luxury properties)"
+     ]
+   },
+   "stage2": [
+     {
+       "prompt": "What is the #1 giveaway that a hotel guest secretly works in hospitality themselves?"
+     },
+     {
+       "prompt": "Name a holiday treat that looks stunning on a buffet table but tastes completely underwhelming."
+     },
+     {
+       "prompt": "What is the absolute worst excuse a colleague could use to leave the company Christmas party early?"
+     }
+   ],
+   "stage3": {
+     "prompt": "If Santa checked into an Accor luxury hotel at 3:00 AM on Christmas morning, what is the first thing he orders from Room Service?"
+   }
+ },
+ "day2": {
+   "stage1": {
+     "prompt": "Rank these iconic Accor brands by the year their founding property was established (Oldest to Newest):",
+     "items": [
+       { "id": "f1", "label": "Raffles (Singapore)" },
+       { "id": "f2", "label": "Fairmont (San Francisco)" },
+       { "id": "f3", "label": "Sofitel (Strasbourg)" },
+       { "id": "f4", "label": "Pullman (Paris)" },
+       { "id": "f5", "label": "Mama Shelter (Paris)" }
+     ],
+     "correctOrder": ["f1", "f2", "f3", "f4", "f5"],
+     "revealStats": [
+       "#1 Raffles (Founded 1887)",
+       "#2 Fairmont (Founded 1907)",
+       "#3 Sofitel (Founded 1964)",
+       "#4 Pullman (Founded 1971)",
+       "#5 Mama Shelter (Founded 2008)"
+     ]
+   },
+   "stage2": [
+     {
+       "prompt": "What is something hotel staff only do 5 minutes before an executive GM inspection?"
+     },
+     {
+       "prompt": "Name an item from an Accor hotel room that guests most frequently 'accidentally' pack into their suitcase."
+     },
+     {
+       "prompt": "What date in December do employees mentally check out of work and turn on auto-reply?"
+     }
+   ],
+   "stage3": {
+     "prompt": "Name the most disastrous thing a guest could say to front desk on Christmas Day."
+   }
+ }
+}

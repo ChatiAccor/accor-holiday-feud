@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Accor Holiday Feud</title>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans select-none pb-8">
+<header class="p-3 bg-blue-950/90 border-b border-blue-800 flex justify-between items-center text-sm">
+<div class="font-bold flex items-center gap-1.5 text-blue-200">
+     🏨 <span id="player-display">Guest</span>
+</div>
+<div class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-0.5 rounded-full font-bold">
+     Score: <span id="player-score">0</span>
+</div>
+</header>
+<main class="flex-1 p-4 max-w-md mx-auto w-full flex flex-col justify-center">
+<!-- Screen: Lobby -->
+<div id="screen-lobby" class="space-y-4 text-center">
+<div class="text-4xl">🎄🛎️</div>
+<h1 class="text-2xl font-black text-amber-400">ACCOR HOLIDAY FEUD</h1>
+<p class="text-xs text-slate-400">Enter your name or meeting room pod:</p>
+<input id="input-name" type="text" placeholder="e.g. Sarah / Team Novotel" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 text-center font-bold text-lg focus:outline-none focus:border-amber-400" />
+<button onclick="joinGame()" class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-black text-lg shadow-lg">JOIN GAME</button>
+</div>
+<!-- Screen: Waiting -->
+<div id="screen-waiting" class="hidden text-center space-y-4">
+<div class="text-5xl animate-bounce">🎁</div>
+<h2 class="text-lg font-bold">You're checked in!</h2>
+<p class="text-slate-400 text-xs">Watch the main screen. The round will start shortly.</p>
+</div>
+<!-- Screen: Stage 1 (Tap to Rank) -->
+<div id="screen-stage1" class="hidden flex-col gap-2">
+<div class="text-center">
+<span class="text-xs font-bold uppercase tracking-widest text-amber-400">Stage 1: Ranking</span>
+<h3 id="s1-prompt" class="font-bold text-sm text-slate-200 mt-1"></h3>
+<p class="text-xs text-slate-400">Tap options below to fill slots #1 to #5</p>
+</div>
+<div id="ranked-slots" class="space-y-1.5 my-2"></div>
+<div class="text-xs font-bold text-slate-400 uppercase mt-1">Available choices:</div>
+<div id="unranked-pool" class="space-y-1.5"></div>
+<button id="btn-submit-rank" onclick="submitRanking()" disabled class="w-full mt-3 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl">LOCK IN RANKING</button>
+</div>
+<!-- Screen: Stage 2 (Hivemind Text) -->
+<div id="screen-stage2" class="hidden flex-col gap-3 text-center">
+<span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Stage 2: The Hivemind</span>
+<h3 id="s2-prompt" class="text-base font-bold"></h3>
+<p class="text-xs text-slate-400">Guess what your colleagues will answer!</p>
+<input id="input-hivemind" type="text" placeholder="Type short answer..." class="w-full p-3.5 rounded-xl bg-slate-800 border border-slate-700 text-center font-bold focus:outline-none focus:border-emerald-400" />
+<button onclick="submitHivemind()" class="w-full py-3.5 bg-emerald-600 font-black rounded-xl">SUBMIT</button>
+</div>
+<!-- Screen: Stage 3 (Finale Voting) -->
+<div id="screen-stage3" class="hidden flex-col gap-3">
+<div class="text-center">
+<span class="text-xs font-bold uppercase tracking-widest text-amber-400">Stage 3: The Finale</span>
+<h3 id="s3-prompt" class="font-bold text-sm text-slate-200 mt-1"></h3>
+<p class="text-xs text-slate-400">Vote for your favorite finalist answer!</p>
+</div>
+<div id="finalist-options" class="space-y-2 mt-2"></div>
+</div>
+<!-- Screen: Locked -->
+<div id="screen-locked" class="hidden text-center space-y-3">
+<div class="text-4xl text-emerald-400">✓</div>
+<h3 class="text-lg font-bold">Answer Locked In!</h3>
+<p class="text-xs text-slate-400">Look up at the main screen for the reveal.</p>
+</div>
+</main>
+<script>
+   const socket = io();
+   let currentRanking = [];
+   let availableItems = [];
+   let cachedQuestions = null;
+   fetch('/api/questions').then(r => r.json()).then(q => cachedQuestions = q);
+   function joinGame() {
+     const name = document.getElementById('input-name').value.trim();
+     if (!name) return;
+     socket.emit('player_join', { name });
+     document.getElementById('player-display').innerText = name;
+     showScreen('screen-waiting');
+   }
+   function showScreen(id) {
+     ['screen-lobby', 'screen-waiting', 'screen-stage1', 'screen-stage2', 'screen-stage3', 'screen-locked'].forEach(s => {
+       document.getElementById(s).classList.add('hidden');
+       document.getElementById(s).classList.remove('flex');
+     });
+     document.getElementById(id).classList.remove('hidden');
+     if (['screen-stage1', 'screen-stage2', 'screen-stage3'].includes(id)) {
+       document.getElementById(id).classList.add('flex');
+     }
+   }
+   socket.on('state_sync', (state) => {
+     const me = state.players[socket.id];
+     if (me) {
+       document.getElementById('player-score').innerText = me.score;
+       if (me.locked && ['STAGE_1', 'STAGE_2'].includes(state.phase)) {
+         showScreen('screen-locked');
+         return;
+       }
+     }
+     if (state.phase === 'LOBBY' && !me) showScreen('screen-lobby');
+     else if (state.phase === 'STAGE_1') renderStage1(state);
+     else if (state.phase === 'STAGE_2') renderStage2(state);
+     else if (state.phase === 'STAGE_3') renderStage3(state);
+     else if (['STAGE_1_REVEAL', 'STAGE_2_REVEAL', 'PODIUM'].includes(state.phase)) showScreen('screen-waiting');
+   });
+   function renderStage1(state) {
+     if (!cachedQuestions) return;
+     showScreen('screen-stage1');
+     const q = cachedQuestions[state.deck].stage1;
+     document.getElementById('s1-prompt').innerText = q.prompt;
+     if (availableItems.length === 0 && currentRanking.length === 0) {
+       availableItems = [...q.items];
+     }
+     refreshRankUI();
+   }
+   function refreshRankUI() {
+     const slots = document.getElementById('ranked-slots');
+     const pool = document.getElementById('unranked-pool');
+     slots.innerHTML = '';
+     pool.innerHTML = '';
+     for (let i = 0; i < 5; i++) {
+       const item = currentRanking[i];
+       const slotEl = document.createElement('div');
+       slotEl.className = 'flex justify-between items-center p-2 rounded-lg border text-xs ' +
+         (item ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-slate-800/40 border-dashed border-slate-700 text-slate-500');
+       slotEl.innerHTML = `<span class="font-bold">#${i+1} ${item ? item.label : 'Tap an option below'}</span>` +
+         (item ? `<button onclick="unassignSlot(${i})" class="px-2 py-0.5 bg-red-900/60 rounded text-red-300">✕</button>` : '');
+       slots.appendChild(slotEl);
+     }
+     availableItems.forEach((item, index) => {
+       const btn = document.createElement('button');
+       btn.className = 'w-full text-left p-2.5 rounded-lg bg-slate-800 border border-slate-700 font-semibold text-xs active:bg-slate-700';
+       btn.innerText = item.label;
+       btn.onclick = () => assignSlot(index);
+       pool.appendChild(btn);
+     });
+     const btnSubmit = document.getElementById('btn-submit-rank');
+     if (currentRanking.length === 5) {
+       btnSubmit.disabled = false;
+       btnSubmit.className = 'w-full mt-3 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg';
+     } else {
+       btnSubmit.disabled = true;
+       btnSubmit.className = 'w-full mt-3 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl';
+     }
+   }
+   function assignSlot(idx) {
+     if (currentRanking.length < 5) {
+       currentRanking.push(availableItems[idx]);
+       availableItems.splice(idx, 1);
+       refreshRankUI();
+     }
+   }
+   function unassignSlot(idx) {
+     availableItems.push(currentRanking[idx]);
+     currentRanking.splice(idx, 1);
+     refreshRankUI();
+   }
+   function submitRanking() {
+     socket.emit('submit_answer', currentRanking.map(x => x.id));
+     showScreen('screen-locked');
+   }
+   function renderStage2(state) {
+     if (!cachedQuestions) return;
+     showScreen('screen-stage2');
+     const q = cachedQuestions[state.deck].stage2[state.stage2QuestionIndex];
+     document.getElementById('s2-prompt').innerText = q.prompt;
+   }
+   function submitHivemind() {
+     const val = document.getElementById('input-hivemind').value.trim();
+     if (!val) return;
+     socket.emit('submit_answer', val);
+     document.getElementById('input-hivemind').value = '';
+     showScreen('screen-locked');
+   }
+   function renderStage3(state) {
+     if (!cachedQuestions) return;
+     showScreen('screen-stage3');
+     document.getElementById('s3-prompt').innerText = cachedQuestions[state.deck].stage3.prompt;
+     const box = document.getElementById('finalist-options');
+     box.innerHTML = '';
+     state.finalists.forEach(f => {
+       const btn = document.createElement('button');
+       btn.className = 'w-full p-3 rounded-xl bg-slate-800 border border-slate-700 font-bold flex justify-between items-center text-sm';
+       btn.innerHTML = `<span>${f.name}</span> <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded">Vote</span>`;
+       btn.onclick = () => {
+         socket.emit('vote_finalist', f.id);
+         showScreen('screen-locked');
+       };
+       box.appendChild(btn);
+     });
+   }
+</script>
+</body>
+</html>
