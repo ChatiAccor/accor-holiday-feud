@@ -2,56 +2,83 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Accor Feud - Big Screen Host</title>
+<title>Accor Feud - Host Screen</title>
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex flex-col font-sans select-none">
-<!-- Host Control Ribbon -->
-<header class="p-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
-<div class="flex items-center gap-3">
+<!-- Host Ribbon -->
+<header class="p-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2">
+<div class="flex items-center gap-2">
 <span class="text-2xl">🏨🎄</span>
-<h1 class="font-black text-lg text-amber-400">ACCOR FEUD HOST</h1>
-<select id="deck-selector" onchange="changeDeck(this.value)" class="bg-slate-800 border border-slate-700 text-xs px-2 py-1 rounded font-bold text-amber-300">
-<option value="day1">Team 1 (Day 1 Deck)</option>
-<option value="day2">Team 2 (Day 2 Deck)</option>
+<select id="deck-selector" onchange="switchDeck(this.value)" class="bg-slate-800 border border-slate-700 text-xs px-2 py-1 rounded font-bold text-amber-300">
+<option value="day1">Day 1: Revenue & BI</option>
+<option value="day2">Day 2: Full Funnel Marketing</option>
 </select>
 </div>
-<div class="flex items-center gap-1.5 flex-wrap">
-<button onclick="sendAction('START_LOBBY')" class="px-2.5 py-1 bg-slate-700 rounded text-xs font-bold">Lobby / Reset</button>
-<button onclick="sendAction('START_STAGE_1')" class="px-2.5 py-1 bg-blue-600 rounded text-xs font-bold">1. Start Rank</button>
-<button onclick="sendAction('REVEAL_STAGE_1')" class="px-2.5 py-1 bg-blue-800 rounded text-xs font-bold">Reveal Ranks</button>
-<button onclick="sendAction('START_STAGE_2', {index: 0})" class="px-2.5 py-1 bg-emerald-600 rounded text-xs font-bold">2. Hivemind Q1</button>
-<button onclick="sendAction('START_STAGE_2', {index: 1})" class="px-2.5 py-1 bg-emerald-600 rounded text-xs font-bold">Q2</button>
-<button onclick="sendAction('CALCULATE_STAGE_2')" class="px-2.5 py-1 bg-emerald-800 rounded text-xs font-bold">Reveal Hivemind</button>
-<button onclick="sendAction('START_STAGE_3')" class="px-2.5 py-1 bg-purple-600 rounded text-xs font-bold">3. Finale (Top 5)</button>
-<button onclick="sendAction('SHOW_PODIUM')" class="px-2.5 py-1 bg-amber-600 rounded text-xs font-bold">🏆 Winner</button>
-<button onclick="exportCSV()" class="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded text-xs font-bold text-slate-300">Export CSV</button>
+<!-- Stepper Controls -->
+<div class="flex items-center gap-2 flex-wrap">
+<button onclick="sendAction('START_LOBBY')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded text-xs font-bold border border-slate-700">Lobby / Reset</button>
+<!-- Round 1: 7 Questions -->
+<div class="flex items-center bg-blue-950 border border-blue-800 rounded-lg px-2 py-0.5">
+<span class="text-xs font-bold text-blue-300 mr-1.5">Round 1:</span>
+<button onclick="stepS1(-1)" class="px-1 text-xs font-bold text-blue-200">◀</button>
+<span id="s1-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/7</span>
+<button onclick="stepS1(1)" class="px-1 text-xs font-bold text-blue-200">▶</button>
+<button onclick="startS1()" class="ml-1.5 px-2 py-0.5 bg-blue-600 rounded text-xs font-bold">Start</button>
+<button onclick="sendAction('REVEAL_STAGE_1')" class="ml-1 px-2 py-0.5 bg-blue-800 rounded text-xs font-bold">Reveal</button>
+</div>
+<!-- Round 2: 13 Questions -->
+<div class="flex items-center bg-emerald-950 border border-emerald-800 rounded-lg px-2 py-0.5">
+<span class="text-xs font-bold text-emerald-300 mr-1.5">Round 2:</span>
+<button onclick="stepS2(-1)" class="px-1 text-xs font-bold text-emerald-200">◀</button>
+<span id="s2-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/13</span>
+<button onclick="stepS2(1)" class="px-1 text-xs font-bold text-emerald-200">▶</button>
+<button onclick="startS2()" class="ml-1.5 px-2 py-0.5 bg-emerald-600 rounded text-xs font-bold">Start</button>
+<button onclick="sendAction('CALCULATE_STAGE_2')" class="ml-1 px-2 py-0.5 bg-emerald-800 rounded text-xs font-bold">Reveal</button>
+</div>
+<!-- Round 3: 3 Questions -->
+<div class="flex items-center bg-purple-950 border border-purple-800 rounded-lg px-2 py-0.5">
+<span class="text-xs font-bold text-purple-300 mr-1.5">Finale:</span>
+<button onclick="stepS3(-1)" class="px-1 text-xs font-bold text-purple-200">◀</button>
+<span id="s3-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/3</span>
+<button onclick="stepS3(1)" class="px-1 text-xs font-bold text-purple-200">▶</button>
+<button onclick="startS3()" class="ml-1.5 px-2 py-0.5 bg-purple-600 rounded text-xs font-bold">Start</button>
+</div>
+<button onclick="sendAction('SHOW_PODIUM')" class="px-2.5 py-1 bg-amber-600 rounded text-xs font-black">🏆 Winner</button>
+<button onclick="exportCSV()" class="px-2 py-1 bg-slate-800 rounded text-xs font-bold border border-slate-700">Export CSV</button>
 </div>
 </header>
 <main class="flex-1 p-6 grid grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
-<!-- Center Stage -->
 <div class="col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-center items-center text-center">
-<!-- Lobby / QR Code -->
+<!-- Lobby / QR -->
 <div id="view-lobby" class="space-y-4">
 <h2 class="text-3xl font-black text-amber-400">SCAN TO JOIN</h2>
 <div id="qrcode" class="p-4 bg-white rounded-2xl inline-block shadow-2xl"></div>
 <p class="text-slate-400 text-sm font-semibold">Visit <span class="text-amber-300 font-mono text-base" id="domain-url"></span></p>
 </div>
-<!-- Stage 1 Reveal -->
-<div id="view-stage1" class="hidden w-full max-w-lg space-y-3">
-<h2 class="text-2xl font-black text-amber-400 mb-4">Official Ranking Breakdown</h2>
-<div id="stage1-reveal-list" class="space-y-2"></div>
+<!-- Stage 1 View -->
+<div id="view-stage1" class="hidden w-full max-w-xl space-y-4">
+<span class="text-xs uppercase font-bold tracking-widest text-blue-400">Round 1: Rapid Ranking</span>
+<h2 id="s1-active-prompt" class="text-xl font-black text-white"></h2>
+<div id="stage1-reveal-list" class="space-y-2 mt-4"></div>
 </div>
-<!-- Stage 2 Reveal -->
-<div id="view-stage2" class="hidden w-full max-w-lg space-y-3">
-<h2 class="text-2xl font-black text-emerald-400 mb-4">The Hivemind Consensus</h2>
-<div id="stage2-reveal-list" class="space-y-2"></div>
+<!-- Stage 2 View -->
+<div id="view-stage2" class="hidden w-full max-w-xl space-y-4">
+<span class="text-xs uppercase font-bold tracking-widest text-emerald-400">Round 2: Public Voting (Hivemind)</span>
+<h2 id="s2-active-prompt" class="text-xl font-black text-white"></h2>
+<div id="stage2-reveal-list" class="space-y-2 mt-4"></div>
 </div>
-<!-- Stage 3 / Podium -->
+<!-- Stage 3 View -->
+<div id="view-stage3" class="hidden w-full max-w-xl space-y-4">
+<span class="text-xs uppercase font-bold tracking-widest text-purple-400">Round 3: Final Showdown</span>
+<h2 id="s3-active-prompt" class="text-xl font-black text-white"></h2>
+<div id="stage3-votes-list" class="space-y-2 mt-4"></div>
+</div>
+<!-- Podium View -->
 <div id="view-podium" class="hidden w-full max-w-md space-y-4">
-<div class="text-6xl animate-bounce">🏆</div>
+<div class="text-7xl animate-bounce">🏆</div>
 <h2 class="text-4xl font-black text-amber-400">CHAMPION</h2>
 <div id="winner-name" class="text-3xl font-black text-white"></div>
 </div>
@@ -62,97 +89,281 @@
 <span>Leaderboard</span>
 <span id="player-count" class="text-amber-400">0 Checked In</span>
 </h3>
-<div id="leaderboard" class="flex-1 overflow-y-auto space-y-2 text-sm pr-1 max-h-[500px]"></div>
+<div id="leaderboard" class="flex-1 overflow-y-auto space-y-2 text-sm pr-1 max-h-[520px]"></div>
 </div>
 </main>
 <script>
-   const socket = io();
-   let currentPlayers = {};
-   let cachedQuestions = null;
-   fetch('/api/questions').then(r => r.json()).then(q => cachedQuestions = q);
-   new QRCode(document.getElementById("qrcode"), {
-     text: window.location.origin,
-     width: 220,
-     height: 220
-   });
-   document.getElementById("domain-url").innerText = window.location.origin;
-   // Chime Sound
-   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-   function playDing() {
-     const osc = audioCtx.createOscillator();
-     const gain = audioCtx.createGain();
-     osc.connect(gain); gain.connect(audioCtx.destination);
-     osc.frequency.setValueAtTime(700, audioCtx.currentTime);
-     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-     osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-   }
-   function sendAction(action, payload = {}) {
-     socket.emit('host_action', { action, payload });
-     playDing();
-   }
-   function changeDeck(deck) {
-     sendAction('SET_DECK', { deck });
-   }
-   socket.on('state_sync', (state) => {
-     currentPlayers = state.players;
-     const list = Object.values(state.players).sort((a,b) => b.score - a.score);
-     document.getElementById('player-count').innerText = `${list.length} Checked In`;
-     const lb = document.getElementById('leaderboard');
-     lb.innerHTML = '';
-     list.forEach((p, idx) => {
-       const row = document.createElement('div');
-       row.className = 'flex justify-between items-center p-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold';
-       row.innerHTML = `<span class="truncate"><span class="text-slate-500 mr-2">#${idx+1}</span>${p.name}</span><span class="text-amber-400 font-bold">${p.score} pts</span>`;
-       lb.appendChild(row);
-     });
-     ['view-lobby', 'view-stage1', 'view-stage2', 'view-podium'].forEach(v => document.getElementById(v).classList.add('hidden'));
-     if (state.phase === 'LOBBY') document.getElementById('view-lobby').classList.remove('hidden');
-     else if (state.phase === 'STAGE_1_REVEAL') {
-       document.getElementById('view-stage1').classList.remove('hidden');
-       renderStage1Board(state);
-     }
-     else if (state.phase === 'STAGE_2_REVEAL') {
-       document.getElementById('view-stage2').classList.remove('hidden');
-       renderStage2Board(state.clusters);
-     }
-     else if (state.phase === 'PODIUM') {
-       document.getElementById('view-podium').classList.remove('hidden');
-       if (list[0]) document.getElementById('winner-name').innerText = list[0].name;
-     }
-   });
-   function renderStage1Board(state) {
-     if (!cachedQuestions) return;
-     const list = document.getElementById('stage1-reveal-list');
-     list.innerHTML = '';
-     const stats = cachedQuestions[state.deck].stage1.revealStats;
-     stats.forEach(s => {
-       const d = document.createElement('div');
-       d.className = 'p-3 bg-slate-800 rounded-xl font-bold border border-slate-700 text-amber-300 text-sm';
-       d.innerText = s;
-       list.appendChild(d);
-     });
-   }
-   function renderStage2Board(clusters) {
-     const list = document.getElementById('stage2-reveal-list');
-     list.innerHTML = '';
-     (clusters || []).forEach((c, idx) => {
-       const d = document.createElement('div');
-       d.className = 'p-3 bg-slate-800 rounded-xl flex justify-between font-bold border border-slate-700 text-emerald-300 text-sm';
-       d.innerHTML = `<span>#${idx+1} ${c.display}</span><span class="text-white">${c.count} Matches (+${c.count * 10} pts)</span>`;
-       list.appendChild(d);
-     });
-   }
-   function exportCSV() {
-     const rows = [["Rank", "Name", "Final Score"]];
-     Object.values(currentPlayers).sort((a,b) => b.score - a.score).forEach((p, idx) => {
-       rows.push([idx + 1, `"${p.name}"`, p.score]);
-     });
-     const blob = new Blob([rows.map(e => e.join(",")).join("\n")], { type: 'text/csv' });
-     const link = document.createElement("a");
-     link.href = URL.createObjectURL(blob);
-     link.download = `Accor_Feud_${new Date().toISOString().slice(0,10)}.csv`;
-     link.click();
-   }
+
+    const socket = io();
+
+    let currentPlayers = {};
+
+    let cachedQuestions = null;
+
+    let currentDeck = 'day1';
+
+    let s1Idx = 0;
+
+    let s2Idx = 0;
+
+    let s3Idx = 0;
+
+    fetch('/api/questions').then(r => r.json()).then(q => cachedQuestions = q);
+
+    new QRCode(document.getElementById("qrcode"), {
+
+      text: window.location.origin,
+
+      width: 220,
+
+      height: 220
+
+    });
+
+    document.getElementById("domain-url").innerText = window.location.origin;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playDing() {
+
+      const osc = audioCtx.createOscillator();
+
+      const gain = audioCtx.createGain();
+
+      osc.connect(gain); gain.connect(audioCtx.destination);
+
+      osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+      osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+
+    }
+
+    function sendAction(action, payload = {}) {
+
+      socket.emit('host_action', { action, payload });
+
+      playDing();
+
+    }
+
+    function switchDeck(deck) {
+
+      currentDeck = deck;
+
+      sendAction('SET_DECK', { deck });
+
+    }
+
+    function stepS1(delta) {
+
+      if (!cachedQuestions) return;
+
+      s1Idx = Math.max(0, Math.min(cachedQuestions[currentDeck].stage1.length - 1, s1Idx + delta));
+
+      document.getElementById('s1-indicator').innerText = `Q ${s1Idx + 1}/7`;
+
+    }
+
+    function startS1() { sendAction('SET_STAGE_1_QUESTION', { index: s1Idx }); }
+
+    function stepS2(delta) {
+
+      if (!cachedQuestions) return;
+
+      s2Idx = Math.max(0, Math.min(cachedQuestions[currentDeck].stage2.length - 1, s2Idx + delta));
+
+      document.getElementById('s2-indicator').innerText = `Q ${s2Idx + 1}/13`;
+
+    }
+
+    function startS2() { sendAction('SET_STAGE_2_QUESTION', { index: s2Idx }); }
+
+    function stepS3(delta) {
+
+      if (!cachedQuestions) return;
+
+      s3Idx = Math.max(0, Math.min(cachedQuestions[currentDeck].stage3.length - 1, s3Idx + delta));
+
+      document.getElementById('s3-indicator').innerText = `Q ${s3Idx + 1}/3`;
+
+    }
+
+    function startS3() { sendAction('SET_STAGE_3_QUESTION', { index: s3Idx }); }
+
+    socket.on('state_sync', (state) => {
+
+      currentPlayers = state.players;
+
+      currentDeck = state.deck;
+
+      document.getElementById('deck-selector').value = state.deck;
+
+      s1Idx = state.stage1Index;
+
+      s2Idx = state.stage2Index;
+
+      s3Idx = state.stage3Index;
+
+      document.getElementById('s1-indicator').innerText = `Q ${s1Idx + 1}/7`;
+
+      document.getElementById('s2-indicator').innerText = `Q ${s2Idx + 1}/13`;
+
+      document.getElementById('s3-indicator').innerText = `Q ${s3Idx + 1}/3`;
+
+      const list = Object.values(state.players).sort((a,b) => b.score - a.score);
+
+      document.getElementById('player-count').innerText = `${list.length} Checked In`;
+
+      const lb = document.getElementById('leaderboard');
+
+      lb.innerHTML = '';
+
+      list.forEach((p, idx) => {
+
+        const row = document.createElement('div');
+
+        row.className = 'flex justify-between items-center p-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold';
+
+        row.innerHTML = `<span class="truncate"><span class="text-slate-500 mr-2">#${idx+1}</span>${p.name}</span><span class="text-amber-400 font-bold">${p.score} pts</span>`;
+
+        lb.appendChild(row);
+
+      });
+
+      ['view-lobby', 'view-stage1', 'view-stage2', 'view-stage3', 'view-podium'].forEach(v => document.getElementById(v).classList.add('hidden'));
+
+      if (state.phase === 'LOBBY') {
+
+        document.getElementById('view-lobby').classList.remove('hidden');
+
+      }
+
+      else if (state.phase === 'STAGE_1' || state.phase === 'STAGE_1_REVEAL') {
+
+        document.getElementById('view-stage1').classList.remove('hidden');
+
+        if (cachedQuestions) {
+
+          document.getElementById('s1-active-prompt').innerText = cachedQuestions[state.deck].stage1[state.stage1Index].prompt;
+
+          const listEl = document.getElementById('stage1-reveal-list');
+
+          listEl.innerHTML = '';
+
+          if (state.phase === 'STAGE_1_REVEAL') {
+
+            cachedQuestions[state.deck].stage1[state.stage1Index].revealStats.forEach(s => {
+
+              const d = document.createElement('div');
+
+              d.className = 'p-3 bg-slate-800 rounded-xl font-bold border border-slate-700 text-amber-300 text-sm';
+
+              d.innerText = s;
+
+              listEl.appendChild(d);
+
+            });
+
+          }
+
+        }
+
+      }
+
+      else if (state.phase === 'STAGE_2' || state.phase === 'STAGE_2_REVEAL') {
+
+        document.getElementById('view-stage2').classList.remove('hidden');
+
+        if (cachedQuestions) {
+
+          document.getElementById('s2-active-prompt').innerText = cachedQuestions[state.deck].stage2[state.stage2Index].prompt;
+
+          const listEl = document.getElementById('stage2-reveal-list');
+
+          listEl.innerHTML = '';
+
+          if (state.phase === 'STAGE_2_REVEAL') {
+
+            (state.clusters || []).forEach((c, idx) => {
+
+              const d = document.createElement('div');
+
+              d.className = 'p-3 bg-slate-800 rounded-xl flex justify-between font-bold border border-slate-700 text-emerald-300 text-sm';
+
+              d.innerHTML = `<span>#${idx+1} ${c.display}</span><span class="text-white">${c.count} Matches (+${c.count * 10} pts)</span>`;
+
+              listEl.appendChild(d);
+
+            });
+
+          }
+
+        }
+
+      }
+
+      else if (state.phase === 'STAGE_3') {
+
+        document.getElementById('view-stage3').classList.remove('hidden');
+
+        if (cachedQuestions) {
+
+          document.getElementById('s3-active-prompt').innerText = cachedQuestions[state.deck].stage3[state.stage3Index].prompt;
+
+          const box = document.getElementById('stage3-votes-list');
+
+          box.innerHTML = '';
+
+          state.finalists.forEach((f, idx) => {
+
+            const d = document.createElement('div');
+
+            d.className = 'p-3 bg-slate-800 rounded-xl flex justify-between font-bold border border-slate-700 text-purple-300 text-sm';
+
+            d.innerHTML = `<span>#${idx+1} ${f.name}</span><span class="text-amber-400">${f.votes || 0} Votes</span>`;
+
+            box.appendChild(d);
+
+          });
+
+        }
+
+      }
+
+      else if (state.phase === 'PODIUM') {
+
+        document.getElementById('view-podium').classList.remove('hidden');
+
+        if (list[0]) document.getElementById('winner-name').innerText = list[0].name;
+
+      }
+
+    });
+
+    function exportCSV() {
+
+      const rows = [["Rank", "Name", "Final Score"]];
+
+      Object.values(currentPlayers).sort((a,b) => b.score - a.score).forEach((p, idx) => {
+
+        rows.push([idx + 1, `"${p.name}"`, p.score]);
+
+      });
+
+      const blob = new Blob([rows.map(e => e.join(",")).join("\n")], { type: 'text/csv' });
+
+      const link = document.createElement("a");
+
+      link.href = URL.createObjectURL(blob);
+
+      link.download = `Accor_Feud_${currentDeck}_${new Date().toISOString().slice(0,10)}.csv`;
+
+      link.click();
+
+    }
 </script>
 </body>
 </html>
+ 
