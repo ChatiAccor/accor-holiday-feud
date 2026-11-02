@@ -1,70 +1,608 @@
 {
- "day1": {
-   "stage1": {
-     "prompt": "Rank these Accor hotel brands by global property count (Largest to Smallest network):",
-     "items": [
-       { "id": "b1", "label": "ibis (all styles/budget)" },
-       { "id": "b2", "label": "Mercure" },
-       { "id": "b3", "label": "Novotel" },
-       { "id": "b4", "label": "Pullman" },
-       { "id": "b5", "label": "Raffles" }
-     ],
-     "correctOrder": ["b1", "b2", "b3", "b4", "b5"],
-     "revealStats": [
-       "#1 ibis Family (~2,500+ hotels)",
-       "#2 Mercure (~950+ hotels)",
-       "#3 Novotel (~560+ hotels)",
-       "#4 Pullman (~150+ hotels)",
-       "#5 Raffles (~20+ ultra-luxury properties)"
-     ]
-   },
-   "stage2": [
-     {
-       "prompt": "What is the #1 giveaway that a hotel guest secretly works in hospitality themselves?"
-     },
-     {
-       "prompt": "Name a holiday treat that looks stunning on a buffet table but tastes completely underwhelming."
-     },
-     {
-       "prompt": "What is the absolute worst excuse a colleague could use to leave the company Christmas party early?"
-     }
-   ],
-   "stage3": {
-     "prompt": "If Santa checked into an Accor luxury hotel at 3:00 AM on Christmas morning, what is the first thing he orders from Room Service?"
-   }
- },
- "day2": {
-   "stage1": {
-     "prompt": "Rank these iconic Accor brands by the year their founding property was established (Oldest to Newest):",
-     "items": [
-       { "id": "f1", "label": "Raffles (Singapore)" },
-       { "id": "f2", "label": "Fairmont (San Francisco)" },
-       { "id": "f3", "label": "Sofitel (Strasbourg)" },
-       { "id": "f4", "label": "Pullman (Paris)" },
-       { "id": "f5", "label": "Mama Shelter (Paris)" }
-     ],
-     "correctOrder": ["f1", "f2", "f3", "f4", "f5"],
-     "revealStats": [
-       "#1 Raffles (Founded 1887)",
-       "#2 Fairmont (Founded 1907)",
-       "#3 Sofitel (Founded 1964)",
-       "#4 Pullman (Founded 1971)",
-       "#5 Mama Shelter (Founded 2008)"
-     ]
-   },
-   "stage2": [
-     {
-       "prompt": "What is something hotel staff only do 5 minutes before an executive GM inspection?"
-     },
-     {
-       "prompt": "Name an item from an Accor hotel room that guests most frequently 'accidentally' pack into their suitcase."
-     },
-     {
-       "prompt": "What date in December do employees mentally check out of work and turn on auto-reply?"
-     }
-   ],
-   "stage3": {
-     "prompt": "Name the most disastrous thing a guest could say to front desk on Christmas Day."
-   }
- }
+
+  "day1": {
+
+    "name": "Day 1: Revenue & BI",
+
+    "stage1": [
+
+      {
+
+        "prompt": "1. Rank these performance metrics by which drop gives a GM the biggest panic attack (Most Panic to Least):",
+
+        "items": [
+
+          { "id": "m1", "label": "RevPAR Index / RGI (Fair market share drop)" },
+
+          { "id": "m2", "label": "Direct Web Channel Share vs OTAs" },
+
+          { "id": "m3", "label": "ADR (Average Daily Rate)" },
+
+          { "id": "m4", "label": "Total Revenue per Available Room (TrevPAR)" },
+
+          { "id": "m5", "label": "Overall Occupancy Percentage" }
+
+        ],
+
+        "correctOrder": ["m1", "m3", "m5", "m2", "m4"],
+
+        "revealStats": [
+
+          "#1 RGI / Market Share (Losing to the comp set hurts GM pride most)",
+
+          "#2 ADR (Rate integrity collapse)",
+
+          "#3 Occupancy % (Empty beds are visible to everyone)",
+
+          "#4 Direct Channel Share (High OTA commission sting)",
+
+          "#5 TrevPAR (Ancillary spend usually gets addressed last)"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "2. Rank these hotel booking lead-time windows by when guests make the most demanding requests:",
+
+        "items": [
+
+          { "id": "b1", "label": "Same-Day 11:00 PM walk-in" },
+
+          { "id": "b2", "label": "24 to 48 Hours prior to arrival" },
+
+          { "id": "b3", "label": "7 to 14 Days prior to arrival" },
+
+          { "id": "b4", "label": "1 to 3 Months prior (Standard leisure)" },
+
+          { "id": "b5", "label": "1 Year in advance (Bride / High-stakes event)" }
+
+        ],
+
+        "correctOrder": ["b1", "b5", "b2", "b3", "b4"],
+
+        "revealStats": [
+
+          "#1 Same-Day 11 PM ('Can I get a high-floor corner suite for 50€?')",
+
+          "#2 1 Year in advance (Demands every floor plan in PDF)",
+
+          "#3 24–48 Hours out (Sudden flight delay upgrade requests)",
+
+          "#4 7–14 Days out (Standard inquiries)",
+
+          "#5 1–3 Months out (Calmest booking window)"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "3. Rank these BI data nightmares by how painful they are to reconcile on Monday morning:",
+
+        "items": [
+
+          { "id": "d1", "label": "Unmapped rate codes dumping revenue into 'Other'" },
+
+          { "id": "d2", "label": "The dreaded #REF! error on row 42,000 of the forecast sheet" },
+
+          { "id": "d3", "label": "Duplicate OTA reservations created during a channel sync lag" },
+
+          { "id": "d4", "label": "PMS midnight rollover failure during monthly close" },
+
+          { "id": "d5", "label": "Someone hardcoding static numbers over your dynamic formulas" }
+
+        ],
+
+        "correctOrder": ["d5", "d4", "d2", "d1", "d3"],
+
+        "revealStats": [
+
+          "#1 Hardcoded numbers over live formulas (Unforgivable crime)",
+
+          "#2 PMS midnight rollover crash during month-end",
+
+          "#3 #REF! cascaded across linked financial models",
+
+          "#4 Unmapped rate codes corrupting segment reporting",
+
+          "#5 Duplicate OTA reservations"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "4. Rank the typical evolution of a Q4 Revenue Forecast file name (From Start to Final Approval):",
+
+        "items": [
+
+          { "id": "f1", "label": "Budget_2027_Draft_v1.xlsx" },
+
+          { "id": "f2", "label": "Budget_2027_Realistic_v3.xlsx" },
+
+          { "id": "f3", "label": "Budget_2027_POST_GM_REVIEW_v6.xlsx" },
+
+          { "id": "f4", "label": "Budget_2027_FINAL_v11.xlsx" },
+
+          { "id": "f5", "label": "Budget_2027_FINAL_FINAL_USE_THIS_ONE_v14_ACTUAL.xlsx" }
+
+        ],
+
+        "correctOrder": ["f1", "f2", "f3", "f4", "f5"],
+
+        "revealStats": [
+
+          "#1 Draft v1 (The optimistic phase)",
+
+          "#2 Realistic v3 (The compromise phase)",
+
+          "#3 Post GM Review v6 (The panic adjustments)",
+
+          "#4 FINAL v11 (The illusion of completion)",
+
+          "#5 FINAL_FINAL_USE_THIS_ONE_v14_ACTUAL (The reality)"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "5. Rank who is blamed first when a hotel misses its monthly budgeted RevPAR target:",
+
+        "items": [
+
+          { "id": "w1", "label": "The Revenue Manager" },
+
+          { "id": "w2", "label": "The Weather / Train Strikes / Airport Delays" },
+
+          { "id": "w3", "label": "The Primary Comp Set dumping rates into the floor" },
+
+          { "id": "w4", "label": "The RMS Algorithm recommendation" },
+
+          { "id": "w5", "label": "Unrealistic Budget targets set by Corporate 11 months ago" }
+
+        ],
+
+        "correctOrder": ["w1", "w3", "w2", "w4", "w5"],
+
+        "revealStats": [
+
+          "#1 The Revenue Manager (Always in the hot seat)",
+
+          "#2 The Comp Set dumping prices",
+
+          "#3 External disruptions (Weather & rail strikes)",
+
+          "#4 The Pricing Algorithm",
+
+          "#5 Corporate Budget Targets (Nobody admits this out loud)"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "6. Rank these Accor brands from highest average weekend length-of-stay to shortest:",
+
+        "items": [
+
+          { "id": "s1", "label": "Adagio Aparthotels" },
+
+          { "id": "s2", "label": "Fairmont / Raffles Resort properties" },
+
+          { "id": "s3", "label": "Novotel" },
+
+          { "id": "s4", "label": "Mercure" },
+
+          { "id": "s5", "label": "ibis budget (Airport / Transit)" }
+
+        ],
+
+        "correctOrder": ["s1", "s2", "s3", "s4", "s5"],
+
+        "revealStats": [
+
+          "#1 Adagio (Apartment-style stays: 4–7+ nights)",
+
+          "#2 Fairmont / Raffles (Luxury weekend getaways: 2.8 nights)",
+
+          "#3 Novotel (Family weekend leisure: 2.1 nights)",
+
+          "#4 Mercure (Mixed business/leisure: 1.7 nights)",
+
+          "#5 ibis budget (Quick overnight transit: 1.1 nights)"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "7. Rank the Revenue Manager's holiday wishes (From Dream Scenario to Absolute Disaster):",
+
+        "items": [
+
+          { "id": "h1", "label": "100% ADR surge on New Year's Eve with zero cancellations" },
+
+          { "id": "h2", "label": "Direct web channel bookings surpass OTA commissions" },
+
+          { "id": "h3", "label": "Overbooking model lands at exact 100.0% occupancy with 0 walks" },
+
+          { "id": "h4", "label": "A 50-room corporate group cancels 48 hours prior with no penalty" },
+
+          { "id": "h5", "label": "Front desk accidentally sells the Presidential Suite at ibis budget rates" }
+
+        ],
+
+        "correctOrder": ["h1", "h2", "h3", "h4", "h5"],
+
+        "revealStats": [
+
+          "#1 100% ADR surge on NYE (Pure revenue bliss)",
+
+          "#2 Direct bookings dominating OTAs",
+
+          "#3 Flawless 100% sellout with zero walks",
+
+          "#4 The dreaded 48-hour group cancellation wash",
+
+          "#5 Rate parity disaster on luxury inventory"
+
+        ]
+
+      }
+
+    ],
+
+    "stage2": [
+
+      { "prompt": "1. What is the #1 phrase guaranteed to trigger a Revenue Manager during a Monday morning pick-up meeting?" },
+
+      { "prompt": "2. Name an excuse a General Manager uses to override the RMS algorithm's recommended pricing." },
+
+      { "prompt": "3. What is the most dangerous column header in an unformatted Excel file sent by hotel staff?" },
+
+      { "prompt": "4. Name a vanity metric that looks incredible on a BI dashboard but means almost nothing in reality." },
+
+      { "prompt": "5. What is the very first website or app a Revenue Manager checks the second they wake up?" },
+
+      { "prompt": "6. Name a reason an OTA market manager suddenly calls you out of the blue." },
+
+      { "prompt": "7. What is the immediate reaction when a hotel accidentally loads a 0.00 EUR mistake rate online?" },
+
+      { "prompt": "8. Name a software tool that BI and Revenue professionals would fight to defend with their lives." },
+
+      { "prompt": "9. If Revenue Managers had the power to ban one guest booking request forever, what would it be?" },
+
+      { "prompt": "10. What is an instant giveaway that someone pretending to understand RevPAR actually has no idea what it is?" },
+
+      { "prompt": "11. Name something that instantly ruins a perfectly forecasted 98% Friday night occupancy." },
+
+      { "prompt": "12. What everyday personal life decision does a Revenue Manager secretly treat like a dynamic pricing algorithm?" },
+
+      { "prompt": "13. What is the corporate equivalent of walking into a burning building in hospitality analytics?" }
+
+    ],
+
+    "stage3": [
+
+      { "prompt": "1. If the entire global GDS and OTA distribution network went down for 24 hours on New Year's Eve, what does Revenue do first?" },
+
+      { "prompt": "2. What is the mythical, dream feature that every BI manager wishes existed in Excel or Power BI?" },
+
+      { "prompt": "3. Complete this sentence: 'A Revenue Manager without morning coffee is just someone who...'" }
+
+    ]
+
+  },
+
+  "day2": {
+
+    "name": "Day 2: Full Funnel Marketing",
+
+    "stage1": [
+
+      {
+
+        "prompt": "1. Rank the traditional marketing funnel stages by where prospective hotel guests drop off the most (Highest drop-off to Lowest):",
+
+        "items": [
+
+          { "id": "k1", "label": "Initial Brand Awareness & Social Discovery" },
+
+          { "id": "k2", "label": "Hotel Property Page Browsing & Room Consideration" },
+
+          { "id": "k3", "label": "Checkout Booking Engine (Payment & Card details)" },
+
+          { "id": "k4", "label": "Post-stay ALL Loyalty program enrollment" },
+
+          { "id": "k5", "label": "Repeat Direct Booking Conversion" }
+
+        ],
+
+        "correctOrder": ["k1", "k2", "k3", "k4", "k5"],
+
+        "revealStats": [
+
+          "#1 Top of Funnel Discovery (~90%+ drop-off from initial ad click)",
+
+          "#2 Property Browsing (Window shoppers comparing 6 tabs)",
+
+          "#3 Checkout Engine (Cart abandonment at hidden fees/taxes)",
+
+          "#4 Post-Stay Loyalty Signup",
+
+          "#5 Repeat Direct Rebooking"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "2. Rank these digital marketing ad metrics from most respected by the CFO to pure vanity:",
+
+        "items": [
+
+          { "id": "a1", "label": "Direct Booking ROAS (Return on Ad Spend)" },
+
+          { "id": "a2", "label": "Net CPA (Cost Per Acquisition)" },
+
+          { "id": "a3", "label": "E-Commerce Conversion Rate %" },
+
+          { "id": "a4", "label": "Ad Click-Through Rate (CTR)" },
+
+          { "id": "a5", "label": "TikTok & Instagram Video Impressions / Views" }
+
+        ],
+
+        "correctOrder": ["a1", "a2", "a3", "a4", "a5"],
+
+        "revealStats": [
+
+          "#1 ROAS (Money in vs. Money out — CFO language)",
+
+          "#2 Cost Per Acquisition (CPA)",
+
+          "#3 Conversion Rate %",
+
+          "#4 Click-Through Rate (CTR)",
+
+          "#5 Social Media Impressions (CFO: 'Can we pay salaries with impressions?')"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "3. Rank email subject lines by average open rate performance (Highest Open Rate to Instant Delete):",
+
+        "items": [
+
+          { "id": "e1", "label": "'[URGENT] Your 15,000 ALL Reward Points are expiring soon'" },
+
+          { "id": "e2", "label": "'Flash Sale: 40% off across Europe for 48 hours only'" },
+
+          { "id": "e3", "label": "'Did you forget something in your basket?' (Abandoned Cart)" },
+
+          { "id": "e4", "label": "'A Holiday Greeting & Note from our CEO'" },
+
+          { "id": "e5", "label": "'Accor Monthly Newsletter: Volume 84 (December)'" }
+
+        ],
+
+        "correctOrder": ["e1", "e3", "e2", "e5", "e4"],
+
+        "revealStats": [
+
+          "#1 Points Expiring (~54% Open Rate — Pure panic)",
+
+          "#2 Cart Abandonment prompt (~42%)",
+
+          "#3 48-Hour Flash Sale (~31%)",
+
+          "#4 Generic Monthly Newsletter (~16%)",
+
+          "#5 Corporate Letter from the CEO (~7% — Instant archive)"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "4. Rank the painful lifecycle of an influencer collaboration request (From First Contact to Reality):",
+
+        "items": [
+
+          { "id": "i1", "label": "DM arrives: 'Hey love your vibe, let's collab for 3 nights in a suite'" },
+
+          { "id": "i2", "label": "Marketing checks their profile and discovers 82% bought bot followers" },
+
+          { "id": "i3", "label": "Hotel GM forwards the DM with note: 'Can we give them a free stay?'" },
+
+          { "id": "i4", "label": "Marketing politely sends the standard Media Kit & Barter Rate card" },
+
+          { "id": "i5", "label": "Influencer leaves Marketing on 'Read' and never replies" }
+
+        ],
+
+        "correctOrder": ["i1", "i3", "i2", "i4", "i5"],
+
+        "revealStats": [
+
+          "#1 The unsolicited DM arrival",
+
+          "#2 The GM excitedly forwarding the DM",
+
+          "#3 Marketing running the follower authenticity audit",
+
+          "#4 Sending the official media rate card",
+
+          "#5 The influencer ghosting immediately"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "5. Rank loyalty perks by what ALL (Accor Live Limitless) members fight for the hardest:",
+
+        "items": [
+
+          { "id": "l1", "label": "Guaranteed Suite Room Upgrade upon arrival" },
+
+          { "id": "l2", "label": "4:00 PM Late Checkout on Sunday" },
+
+          { "id": "l3", "label": "Executive Lounge access (Free evening canapés & wine)" },
+
+          { "id": "l4", "label": "Double Reward Points multiplier" },
+
+          { "id": "l5", "label": "The Welcome Drink voucher at the hotel bar" }
+
+        ],
+
+        "correctOrder": ["l1", "l3", "l2", "l4", "l5"],
+
+        "revealStats": [
+
+          "#1 Suite Upgrades (The ultimate holy grail flex)",
+
+          "#2 Executive Club Lounge access",
+
+          "#3 4:00 PM Late Checkout",
+
+          "#4 Bonus Reward Points",
+
+          "#5 The paper Welcome Drink voucher"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "6. Rank these marketing campaign assets by how long they take to get hotel stakeholder sign-off:",
+
+        "items": [
+
+          { "id": "s1", "label": "Global Brand Identity Guidelines overhaul" },
+
+          { "id": "s2", "label": "Legal & GDPR clearance for a customer prize draw" },
+
+          { "id": "s3", "label": "Getting a Hotel GM to approve professional photos of their renovated lobby" },
+
+          { "id": "s4", "label": "Paid Social Media copy translations into 12 languages" },
+
+          { "id": "s5", "label": "A simple 15-second Instagram Story video" }
+
+        ],
+
+        "correctOrder": ["s3", "s1", "s2", "s4", "s5"],
+
+        "revealStats": [
+
+          "#1 Hotel GM approving photos ('The cushions aren't fluffed right')",
+
+          "#2 Global Brand Guidelines overhaul",
+
+          "#3 Legal & GDPR terms compliance",
+
+          "#4 12-language localized translations",
+
+          "#5 Social Story asset"
+
+        ]
+
+      },
+
+      {
+
+        "prompt": "7. Rank the primary reasons a customer abandons the direct hotel booking engine at the final step:",
+
+        "items": [
+
+          { "id": "p1", "label": "Unexpected City Tax or Resort Fee added at the final screen" },
+
+          { "id": "p2", "label": "Room type was sold out while filling in personal details" },
+
+          { "id": "p3", "label": "Booking engine requested password for an account they forgot" },
+
+          { "id": "p4", "label": "Went to an OTA (Booking.com) to check if the rate was 2€ cheaper" },
+
+          { "id": "p5", "label": "Payment gateway 3D Secure SMS code failed to arrive" }
+
+        ],
+
+        "correctOrder": ["p1", "p4", "p3", "p5", "p2"],
+
+        "revealStats": [
+
+          "#1 Hidden fees & city taxes appearing at checkout",
+
+          "#2 Jumping to OTAs to price-check parity",
+
+          "#3 Forgotten account login barriers",
+
+          "#4 Banking 3D-Secure SMS delivery failures",
+
+          "#5 Inventory expiring during checkout"
+
+        ]
+
+      }
+
+    ],
+
+    "stage2": [
+
+      { "prompt": "1. What is the single most overused corporate buzzword in hospitality marketing strategy decks?" },
+
+      { "prompt": "2. Name an item every travel creator or influencer photographs within 60 seconds of entering an Accor hotel room." },
+
+      { "prompt": "3. What is the fastest thing a hotel team can do to get their local ad campaign immediately rejected by Brand Compliance?" },
+
+      { "prompt": "4. What is the #1 reason a loyal guest immediately hits 'Unsubscribe' on an Accor marketing email?" },
+
+      { "prompt": "5. When a hotel GM replies to a negative TripAdvisor review, what is the #1 corporate cliché sentence they always use?" },
+
+      { "prompt": "6. Name a digital marketing metric that sounds incredibly sophisticated during a presentation but nobody actually understands." },
+
+      { "prompt": "7. What is the biggest red flag in an inbound brand partnership or collaboration pitch email?" },
+
+      { "prompt": "8. Name a creative asset that Central Marketing begs hotels to provide that takes the property 6 months to send." },
+
+      { "prompt": "9. What is something digital performance marketers do that colleagues in other departments think is dark magic?" },
+
+      { "prompt": "10. What does an ALL loyalty member actually order when redeeming their paper Welcome Drink voucher at the bar?" },
+
+      { "prompt": "11. What is the most terrifying email subject line a Marketing Director can receive at 4:45 PM on a Friday?" },
+
+      { "prompt": "12. If ALL reward points were officially recognized as currency in everyday life, what would hotel guests buy first?" },
+
+      { "prompt": "13. Name a photo that is guaranteed to appear on 100% of luxury hotel social media accounts." }
+
+    ],
+
+    "stage3": [
+
+      { "prompt": "1. If you had an unlimited marketing budget for 24 hours to pull off one viral stunt for Accor, what would you do?" },
+
+      { "prompt": "2. What is the absolute worst digital disaster that could happen to the marketing team during a Black Friday flash sale?" },
+
+      { "prompt": "3. If an AI completely took over the Accor marketing department tomorrow, what is the first ridiculous campaign it would launch?" }
+
+    ]
+
+  }
+
 }
+ 
