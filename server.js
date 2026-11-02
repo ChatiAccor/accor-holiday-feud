@@ -64,7 +64,7 @@ function similarity(s1, s2) {
 
   let longer = s1.length < s2.length ? s2 : s1;
 
-  let shorter = s1.length < s2.length ? s1 : s2;
+  let shorter = s1.length < s2.length ? s2 : s1;
 
   if (longer.length === 0) return 1.0;
 
@@ -339,5 +339,3 @@ app.get('/api/questions', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => console.log(`Accor Feud server running on port ${PORT}`));
-Socket.IO
- 
