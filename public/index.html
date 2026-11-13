@@ -10,12 +10,11 @@
 <body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans select-none pb-8">
 <header class="p-3 bg-blue-950/90 border-b border-blue-800 flex justify-between items-center text-sm">
 <div class="font-bold flex items-center gap-1.5 text-blue-200">
-
-      🏨 <span id="player-display">Guest</span>
+     🏨 <span id="player-display">Guest</span>
+<button onclick="resetLocalSession()" class="text-[10px] text-slate-400 underline ml-2">Switch</button>
 </div>
 <div class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-0.5 rounded-full font-bold">
-
-      Score: <span id="player-score">0</span>
+     Score: <span id="player-score">0</span>
 </div>
 </header>
 <main class="flex-1 p-4 max-w-md mx-auto w-full flex flex-col justify-center">
@@ -70,293 +69,178 @@
 </div>
 </main>
 <script>
-
-    const socket = io();
-
-    let currentRanking = [];
-
-    let availableItems = [];
-
-    let cachedQuestions = null;
-
-    let lastRenderedS1 = -1;
-
-    let lastRenderedS2 = -1;
-
-    let lastRenderedS3 = -1;
-
-    fetch('/api/questions').then(r => r.json()).then(q => cachedQuestions = q);
-
-    function joinGame() {
-
-      const name = document.getElementById('input-name').value.trim();
-
-      if (!name) return;
-
-      socket.emit('player_join', { name });
-
-      document.getElementById('player-display').innerText = name;
-
-      showScreen('screen-waiting');
-
-    }
-
-    function showScreen(id) {
-
-      ['screen-lobby', 'screen-waiting', 'screen-stage1', 'screen-stage2', 'screen-stage3', 'screen-locked'].forEach(s => {
-
-        document.getElementById(s).classList.add('hidden');
-
-        document.getElementById(s).classList.remove('flex');
-
-      });
-
-      document.getElementById(id).classList.remove('hidden');
-
-      if (['screen-stage1', 'screen-stage2', 'screen-stage3'].includes(id)) {
-
-        document.getElementById(id).classList.add('flex');
-
-      }
-
-    }
-
-    function getQuestion(deckKey, stageKey, index) {
-
-      if (!cachedQuestions) return null;
-
-      const deck = cachedQuestions[deckKey] || cachedQuestions['day1'];
-
-      if (!deck) return null;
-
-      const stage = deck[stageKey];
-
-      if (Array.isArray(stage)) {
-
-        return stage[index || 0];
-
-      }
-
-      return stage;
-
-    }
-
-    socket.on('state_sync', (state) => {
-
-      const me = state.players[socket.id];
-
-      if (me) {
-
-        document.getElementById('player-score').innerText = me.score;
-
-        if (me.locked && ['STAGE_1', 'STAGE_2', 'STAGE_3'].includes(state.phase)) {
-
-          showScreen('screen-locked');
-
-          return;
-
-        }
-
-      }
-
-      if (state.phase === 'LOBBY' && !me) showScreen('screen-lobby');
-
-      else if (state.phase === 'STAGE_1') renderStage1(state);
-
-      else if (state.phase === 'STAGE_2') renderStage2(state);
-
-      else if (state.phase === 'STAGE_3') renderStage3(state);
-
-      else if (['STAGE_1_REVEAL', 'STAGE_2_REVEAL', 'PODIUM'].includes(state.phase)) showScreen('screen-waiting');
-
-    });
-
-    function renderStage1(state) {
-
-      const q = getQuestion(state.deck, 'stage1', state.stage1Index);
-
-      if (!q) return;
-
-      if (lastRenderedS1 !== state.stage1Index) {
-
-        lastRenderedS1 = state.stage1Index;
-
-        currentRanking = [];
-
-        availableItems = [...q.items];
-
-      }
-
-      showScreen('screen-stage1');
-
-      document.getElementById('s1-prompt').innerText = q.prompt;
-
-      refreshRankUI();
-
-    }
-
-    function refreshRankUI() {
-
-      const slots = document.getElementById('ranked-slots');
-
-      const pool = document.getElementById('unranked-pool');
-
-      slots.innerHTML = '';
-
-      pool.innerHTML = '';
-
-      for (let i = 0; i < 5; i++) {
-
-        const item = currentRanking[i];
-
-        const slotEl = document.createElement('div');
-
-        slotEl.className = 'flex justify-between items-center p-2 rounded-lg border text-xs ' + 
-
-          (item ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-slate-800/40 border-dashed border-slate-700 text-slate-500');
-
-        slotEl.innerHTML = `<span class="font-bold">#${i+1} ${item ? item.label : 'Tap an option below'}</span>` + 
-
-          (item ? `<button onclick="unassignSlot(${i})" class="px-2 py-0.5 bg-red-900/60 rounded text-red-300">✕</button>` : '');
-
-        slots.appendChild(slotEl);
-
-      }
-
-      availableItems.forEach((item, index) => {
-
-        const btn = document.createElement('button');
-
-        btn.className = 'w-full text-left p-2.5 rounded-lg bg-slate-800 border border-slate-700 font-semibold text-xs active:bg-slate-700';
-
-        btn.innerText = item.label;
-
-        btn.onclick = () => assignSlot(index);
-
-        pool.appendChild(btn);
-
-      });
-
-      const btnSubmit = document.getElementById('btn-submit-rank');
-
-      if (currentRanking.length === 5) {
-
-        btnSubmit.disabled = false;
-
-        btnSubmit.className = 'w-full mt-3 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg';
-
-      } else {
-
-        btnSubmit.disabled = true;
-
-        btnSubmit.className = 'w-full mt-3 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl';
-
-      }
-
-    }
-
-    function assignSlot(idx) {
-
-      if (currentRanking.length < 5) {
-
-        currentRanking.push(availableItems[idx]);
-
-        availableItems.splice(idx, 1);
-
-        refreshRankUI();
-
-      }
-
-    }
-
-    function unassignSlot(idx) {
-
-      availableItems.push(currentRanking[idx]);
-
-      currentRanking.splice(idx, 1);
-
-      refreshRankUI();
-
-    }
-
-    function submitRanking() {
-
-      socket.emit('submit_answer', currentRanking.map(x => x.id));
-
-      showScreen('screen-locked');
-
-    }
-
-    function renderStage2(state) {
-
-      const q = getQuestion(state.deck, 'stage2', state.stage2Index);
-
-      if (!q) return;
-
-      if (lastRenderedS2 !== state.stage2Index) {
-
-        lastRenderedS2 = state.stage2Index;
-
-        document.getElementById('input-hivemind').value = '';
-
-      }
-
-      showScreen('screen-stage2');
-
-      document.getElementById('s2-prompt').innerText = q.prompt;
-
-    }
-
-    function submitHivemind() {
-
-      const val = document.getElementById('input-hivemind').value.trim();
-
-      if (!val) return;
-
-      socket.emit('submit_answer', val);
-
-      showScreen('screen-locked');
-
-    }
-
-    function renderStage3(state) {
-
-      const q = getQuestion(state.deck, 'stage3', state.stage3Index);
-
-      if (!q) return;
-
-      lastRenderedS3 = state.stage3Index;
-
-      showScreen('screen-stage3');
-
-      document.getElementById('s3-prompt').innerText = q.prompt;
-
-      const box = document.getElementById('finalist-options');
-
-      box.innerHTML = '';
-
-      state.finalists.forEach(f => {
-
-        const btn = document.createElement('button');
-
-        btn.className = 'w-full p-3 rounded-xl bg-slate-800 border border-slate-700 font-bold flex justify-between items-center text-sm';
-
-        btn.innerHTML = `<span>${f.name}</span> <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded">Vote</span>`;
-
-        btn.onclick = () => {
-
-          socket.emit('vote_finalist', f.id);
-
-          showScreen('screen-locked');
-
-        };
-
-        box.appendChild(btn);
-
-      });
-
-    }
+   const socket = io();
+   let currentRanking = [];
+   let availableItems = [];
+   let cachedQuestions = null;
+   let lastRenderedS1 = -1;
+   let lastRenderedS2 = -1;
+   let lastRenderedS3 = -1;
+   // Persistent Player ID
+   let myPlayerId = localStorage.getItem('feud_playerId');
+   if (!myPlayerId) {
+     myPlayerId = 'p_' + Math.random().toString(36).substring(2, 9) + Date.now();
+     localStorage.setItem('feud_playerId', myPlayerId);
+   }
+   let savedName = localStorage.getItem('feud_playerName');
+   fetch('/api/questions').then(r => r.json()).then(q => {
+     cachedQuestions = q;
+   });
+   // Auto-reconnect on page load if user already joined
+   socket.on('connect', () => {
+     if (savedName) {
+       document.getElementById('player-display').innerText = savedName;
+       socket.emit('player_join', { playerId: myPlayerId, name: savedName });
+     }
+   });
+   function joinGame() {
+     const name = document.getElementById('input-name').value.trim();
+     if (!name) return;
+     savedName = name;
+     localStorage.setItem('feud_playerName', name);
+     document.getElementById('player-display').innerText = name;
+     socket.emit('player_join', { playerId: myPlayerId, name });
+     showScreen('screen-waiting');
+   }
+   function resetLocalSession() {
+     if (confirm("Switch to a new player? Your current points will be disconnected on this device.")) {
+       localStorage.removeItem('feud_playerId');
+       localStorage.removeItem('feud_playerName');
+       location.reload();
+     }
+   }
+   function showScreen(id) {
+     ['screen-lobby', 'screen-waiting', 'screen-stage1', 'screen-stage2', 'screen-stage3', 'screen-locked'].forEach(s => {
+       document.getElementById(s).classList.add('hidden');
+       document.getElementById(s).classList.remove('flex');
+     });
+     document.getElementById(id).classList.remove('hidden');
+     if (['screen-stage1', 'screen-stage2', 'screen-stage3'].includes(id)) {
+       document.getElementById(id).classList.add('flex');
+     }
+   }
+   function getQuestion(deckKey, stageKey, index) {
+     if (!cachedQuestions) return null;
+     const deck = cachedQuestions[deckKey] || cachedQuestions['day1'];
+     if (!deck) return null;
+     const stage = deck[stageKey];
+     return Array.isArray(stage) ? stage[index || 0] : stage;
+   }
+   socket.on('state_sync', (state) => {
+     const me = state.players[myPlayerId];
+     if (me) {
+       document.getElementById('player-score').innerText = me.score;
+       document.getElementById('player-display').innerText = me.name;
+       // If player already submitted for this question, keep locked screen even on refresh
+       if (me.locked && ['STAGE_1', 'STAGE_2', 'STAGE_3'].includes(state.phase)) {
+         showScreen('screen-locked');
+         return;
+       }
+     }
+     if (state.phase === 'LOBBY') {
+       if (!me) showScreen('screen-lobby');
+       else showScreen('screen-waiting');
+     }
+     else if (state.phase === 'STAGE_1') renderStage1(state);
+     else if (state.phase === 'STAGE_2') renderStage2(state);
+     else if (state.phase === 'STAGE_3') renderStage3(state);
+     else if (['STAGE_1_REVEAL', 'STAGE_2_REVEAL', 'PODIUM'].includes(state.phase)) {
+       showScreen('screen-waiting');
+     }
+   });
+   function renderStage1(state) {
+     const q = getQuestion(state.deck, 'stage1', state.stage1Index);
+     if (!q) return;
+     if (lastRenderedS1 !== state.stage1Index) {
+       lastRenderedS1 = state.stage1Index;
+       currentRanking = [];
+       availableItems = [...q.items];
+     }
+     showScreen('screen-stage1');
+     document.getElementById('s1-prompt').innerText = q.prompt;
+     refreshRankUI();
+   }
+   function refreshRankUI() {
+     const slots = document.getElementById('ranked-slots');
+     const pool = document.getElementById('unranked-pool');
+     slots.innerHTML = '';
+     pool.innerHTML = '';
+     for (let i = 0; i < 5; i++) {
+       const item = currentRanking[i];
+       const slotEl = document.createElement('div');
+       slotEl.className = 'flex justify-between items-center p-2 rounded-lg border text-xs ' +
+         (item ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-slate-800/40 border-dashed border-slate-700 text-slate-500');
+       slotEl.innerHTML = `<span class="font-bold">#${i+1} ${item ? item.label : 'Tap an option below'}</span>` +
+         (item ? `<button onclick="unassignSlot(${i})" class="px-2 py-0.5 bg-red-900/60 rounded text-red-300">✕</button>` : '');
+       slots.appendChild(slotEl);
+     }
+     availableItems.forEach((item, index) => {
+       const btn = document.createElement('button');
+       btn.className = 'w-full text-left p-2.5 rounded-lg bg-slate-800 border border-slate-700 font-semibold text-xs active:bg-slate-700';
+       btn.innerText = item.label;
+       btn.onclick = () => assignSlot(index);
+       pool.appendChild(btn);
+     });
+     const btnSubmit = document.getElementById('btn-submit-rank');
+     if (currentRanking.length === 5) {
+       btnSubmit.disabled = false;
+       btnSubmit.className = 'w-full mt-3 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg';
+     } else {
+       btnSubmit.disabled = true;
+       btnSubmit.className = 'w-full mt-3 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl';
+     }
+   }
+   function assignSlot(idx) {
+     if (currentRanking.length < 5) {
+       currentRanking.push(availableItems[idx]);
+       availableItems.splice(idx, 1);
+       refreshRankUI();
+     }
+   }
+   function unassignSlot(idx) {
+     availableItems.push(currentRanking[idx]);
+     currentRanking.splice(idx, 1);
+     refreshRankUI();
+   }
+   function submitRanking() {
+     socket.emit('submit_answer', currentRanking.map(x => x.id));
+     showScreen('screen-locked');
+   }
+   function renderStage2(state) {
+     const q = getQuestion(state.deck, 'stage2', state.stage2Index);
+     if (!q) return;
+     if (lastRenderedS2 !== state.stage2Index) {
+       lastRenderedS2 = state.stage2Index;
+       document.getElementById('input-hivemind').value = '';
+     }
+     showScreen('screen-stage2');
+     document.getElementById('s2-prompt').innerText = q.prompt;
+   }
+   function submitHivemind() {
+     const val = document.getElementById('input-hivemind').value.trim();
+     if (!val) return;
+     socket.emit('submit_answer', val);
+     showScreen('screen-locked');
+   }
+   function renderStage3(state) {
+     const q = getQuestion(state.deck, 'stage3', state.stage3Index);
+     if (!q) return;
+     lastRenderedS3 = state.stage3Index;
+     showScreen('screen-stage3');
+     document.getElementById('s3-prompt').innerText = q.prompt;
+     const box = document.getElementById('finalist-options');
+     box.innerHTML = '';
+     state.finalists.forEach(f => {
+       const btn = document.createElement('button');
+       btn.className = 'w-full p-3 rounded-xl bg-slate-800 border border-slate-700 font-bold flex justify-between items-center text-sm';
+       btn.innerHTML = `<span>${f.name}</span> <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded">Vote</span>`;
+       btn.onclick = () => {
+         socket.emit('vote_finalist', f.id);
+         showScreen('screen-locked');
+       };
+       box.appendChild(btn);
+     });
+   }
 </script>
 </body>
 </html>
- 
