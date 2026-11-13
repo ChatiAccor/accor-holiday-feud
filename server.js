@@ -106,9 +106,37 @@ function similarity(s1, s2) {
 
 io.on('connection', (socket) => {
 
+  // Unique Name Join & Reconnect
+
   socket.on('player_join', ({ playerId, name }) => {
 
     if (!playerId) return;
+
+    const cleanName = (name || '').trim().slice(0, 20);
+
+    if (!cleanName) {
+
+      socket.emit('join_error', 'Please enter a valid name to join.');
+
+      return;
+
+    }
+
+    // Enforce unique names across different playerIds (case-insensitive)
+
+    const duplicate = Object.values(gameState.players).find(
+
+      p => p.id !== playerId && p.name.toLowerCase() === cleanName.toLowerCase()
+
+    );
+
+    if (duplicate) {
+
+      socket.emit('join_error', `"${cleanName}" is already taken! Try adding your last initial or hotel.`);
+
+      return;
+
+    }
 
     socket.playerId = playerId;
 
@@ -118,7 +146,7 @@ io.on('connection', (socket) => {
 
         id: playerId,
 
-        name: (name || 'Guest').slice(0, 20),
+        name: cleanName,
 
         score: 0,
 
@@ -132,15 +160,19 @@ io.on('connection', (socket) => {
 
       };
 
-    } else if (name && name.trim()) {
+    } else {
 
-      gameState.players[playerId].name = name.slice(0, 20);
+      gameState.players[playerId].name = cleanName;
 
     }
+
+    socket.emit('join_success', gameState.players[playerId]);
 
     io.emit('state_sync', gameState);
 
   });
+
+  // Host Controls
 
   socket.on('host_action', ({ action, payload }) => {
 
@@ -155,6 +187,22 @@ io.on('connection', (socket) => {
       gameState.stage2Index = 0;
 
       gameState.stage3Index = 0;
+
+    }
+
+    else if (action === 'KICK_PLAYER') {
+
+      const targetId = payload?.playerId;
+
+      if (targetId && gameState.players[targetId]) {
+
+        delete gameState.players[targetId];
+
+        gameState.finalists = gameState.finalists.filter(f => f.id !== targetId);
+
+        io.emit('player_kicked', { playerId: targetId });
+
+      }
 
     }
 
@@ -449,4 +497,3 @@ app.get('/api/questions', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
- 
