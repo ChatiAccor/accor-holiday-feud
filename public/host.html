@@ -18,6 +18,40 @@
     }
 
     .animate-pop { animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes shinePulse {
+
+      0%, 100% {
+
+        transform: scale(1);
+
+        box-shadow: 0 0 10px rgba(250, 204, 21, 0.75), 0 0 22px rgba(250, 204, 21, 0.45);
+
+        filter: brightness(1.1);
+
+      }
+
+      50% {
+
+        transform: scale(1.09);
+
+        box-shadow: 0 0 20px rgba(250, 204, 21, 1), 0 0 38px rgba(250, 204, 21, 0.85);
+
+        filter: brightness(1.35);
+
+      }
+
+    }
+
+    .btn-reveal-shine {
+
+      animation: shinePulse 1.15s infinite ease-in-out;
+
+      border: 2px solid #fde047 !important;
+
+      color: #ffffff !important;
+
+    }
 </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex flex-col font-sans select-none overflow-x-hidden">
@@ -32,48 +66,48 @@
 <header class="p-3 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2 shadow-lg">
 <div class="flex items-center gap-2">
 <span class="text-2xl">🏨🎄</span>
-<select id="deck-selector" onchange="switchDeck(this.value)" class="bg-slate-800 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg font-bold text-amber-300 focus:outline-none">
+<select id="deck-selector" onchange="switchDeck(this.value)" class="lockable-ctrl bg-slate-800 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg font-bold text-amber-300 focus:outline-none transition">
 <option value="day1">Day 1: Revenue & BI</option>
 <option value="day2">Day 2: Full Funnel Marketing</option>
 </select>
-<button onclick="sendAction('START_LOBBY')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700">Lobby / Reset</button>
+<button id="btn-lobby" onclick="sendAction('START_LOBBY')" class="lockable-ctrl px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700 transition">Lobby / Reset</button>
 </div>
 <!-- Stage Steppers -->
 <div class="flex items-center gap-2 flex-wrap">
 <!-- Round 1 -->
 <div class="flex items-center bg-blue-950/80 border border-blue-800 rounded-lg px-2 py-1">
 <span class="text-xs font-bold text-blue-300 mr-1.5">R1 Rank:</span>
-<button onclick="stepS1(-1)" class="px-1 text-xs font-bold text-blue-200 hover:text-white">◀</button>
+<button id="btn-s1-prev" onclick="stepS1(-1)" class="lockable-ctrl px-1 text-xs font-bold text-blue-200 hover:text-white transition">◀</button>
 <span id="s1-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/7</span>
-<button onclick="stepS1(1)" class="px-1 text-xs font-bold text-blue-200 hover:text-white">▶</button>
-<button onclick="startS1()" class="ml-1.5 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-bold">Start</button>
-<button onclick="revealS1()" class="ml-1 px-2 py-0.5 bg-blue-800 hover:bg-blue-700 rounded text-xs font-bold">Reveal</button>
+<button id="btn-s1-next" onclick="stepS1(1)" class="lockable-ctrl px-1 text-xs font-bold text-blue-200 hover:text-white transition">▶</button>
+<button id="btn-s1-start" onclick="startS1()" class="lockable-ctrl ml-1.5 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-bold transition">Start</button>
+<button id="btn-s1-reveal" onclick="revealS1()" class="lockable-ctrl ml-1.5 px-2.5 py-0.5 bg-blue-700 hover:bg-blue-600 rounded text-xs font-black transition">Reveal</button>
 </div>
 <!-- Round 2 -->
 <div class="flex items-center bg-emerald-950/80 border border-emerald-800 rounded-lg px-2 py-1">
 <span class="text-xs font-bold text-emerald-300 mr-1.5">R2 Vote:</span>
-<button onclick="stepS2(-1)" class="px-1 text-xs font-bold text-emerald-200 hover:text-white">◀</button>
+<button id="btn-s2-prev" onclick="stepS2(-1)" class="lockable-ctrl px-1 text-xs font-bold text-emerald-200 hover:text-white transition">◀</button>
 <span id="s2-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/13</span>
-<button onclick="stepS2(1)" class="px-1 text-xs font-bold text-emerald-200 hover:text-white">▶</button>
-<button onclick="startS2()" class="ml-1.5 px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-bold">Start</button>
-<button onclick="revealS2()" class="ml-1 px-2 py-0.5 bg-emerald-800 hover:bg-emerald-700 rounded text-xs font-bold">Reveal</button>
+<button id="btn-s2-next" onclick="stepS2(1)" class="lockable-ctrl px-1 text-xs font-bold text-emerald-200 hover:text-white transition">▶</button>
+<button id="btn-s2-start" onclick="startS2()" class="lockable-ctrl ml-1.5 px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-bold transition">Start</button>
+<button id="btn-s2-reveal" onclick="revealS2()" class="lockable-ctrl ml-1.5 px-2.5 py-0.5 bg-emerald-700 hover:bg-emerald-600 rounded text-xs font-black transition">Reveal</button>
 </div>
 <!-- Round 3 -->
 <div class="flex items-center bg-purple-950/80 border border-purple-800 rounded-lg px-2 py-1">
 <span class="text-xs font-bold text-purple-300 mr-1.5">Finale:</span>
-<button onclick="stepS3(-1)" class="px-1 text-xs font-bold text-purple-200 hover:text-white">◀</button>
+<button id="btn-s3-prev" onclick="stepS3(-1)" class="lockable-ctrl px-1 text-xs font-bold text-purple-200 hover:text-white transition">◀</button>
 <span id="s3-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/3</span>
-<button onclick="stepS3(1)" class="px-1 text-xs font-bold text-purple-200 hover:text-white">▶</button>
-<button onclick="startS3()" class="ml-1.5 px-2 py-0.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-bold">Start</button>
+<button id="btn-s3-next" onclick="stepS3(1)" class="lockable-ctrl px-1 text-xs font-bold text-purple-200 hover:text-white transition">▶</button>
+<button id="btn-s3-start" onclick="startS3()" class="lockable-ctrl ml-1.5 px-2 py-0.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-bold transition">Start</button>
 </div>
 </div>
-<!-- Spectacle & Audio Controls -->
+<!-- Spectacle & Audio Controls (Always Available) -->
 <div class="flex items-center gap-1.5 flex-wrap">
 <button id="btn-voice-toggle" onclick="toggleVoice()" class="px-2.5 py-1.5 bg-emerald-900/60 border border-emerald-700 text-emerald-300 rounded-lg text-xs font-bold">
 
         🔊 Voice: ON
 </button>
-<button onclick="announceLeader()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-bold text-amber-300" title="Announce current #1 leader">
+<button onclick="announceLeader()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-bold text-amber-300" title="Announce current #1 leader on demand">
 
         🎅 Announce #1
 </button>
@@ -81,11 +115,11 @@
 
         ❌ Strike
 </button>
-<button onclick="triggerWinner()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-lg text-xs font-black shadow">
+<button id="btn-podium" onclick="triggerWinner()" class="lockable-ctrl px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-lg text-xs font-black shadow transition">
 
         🏆 Podium
 </button>
-<button onclick="exportCSV()" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700 text-slate-300">
+<button id="btn-csv" onclick="exportCSV()" class="lockable-ctrl px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700 text-slate-300 transition">
 
         CSV
 </button>
@@ -222,7 +256,7 @@
 
     document.getElementById("domain-url").innerText = window.location.origin;
 
-    // --- VOICE ANNOUNCER ENGINE (Santa / Game Show Host) ---
+    // --- VOICE ANNOUNCER ENGINE (Round Start & On-Demand Only) ---
 
     function speak(text) {
 
@@ -248,9 +282,9 @@
 
       if (preferred) utter.voice = preferred;
 
-      utter.pitch = 0.8;  // Deep festive Santa / Game Show tone
+      utter.pitch = 0.8;
 
-      utter.rate = 0.96;  // Clear, energetic delivery
+      utter.rate = 0.96;
 
       window.speechSynthesis.speak(utter);
 
@@ -316,6 +350,78 @@
 
     }
 
+    // --- UI LOCKING & REVEAL SPOTLIGHT ---
+
+    function updateControlLockState(phase) {
+
+      const allLockable = document.querySelectorAll('.lockable-ctrl');
+
+      const r1Reveal = document.getElementById('btn-s1-reveal');
+
+      const r2Reveal = document.getElementById('btn-s2-reveal');
+
+      // Reset shine animations first
+
+      r1Reveal.classList.remove('btn-reveal-shine');
+
+      r2Reveal.classList.remove('btn-reveal-shine');
+
+      if (phase === 'STAGE_1') {
+
+        // Grey out and disable everything except Round 1 Reveal
+
+        allLockable.forEach(el => {
+
+          el.disabled = true;
+
+          el.classList.add('opacity-25', 'pointer-events-none', 'cursor-not-allowed');
+
+        });
+
+        r1Reveal.disabled = false;
+
+        r1Reveal.classList.remove('opacity-25', 'pointer-events-none', 'cursor-not-allowed');
+
+        r1Reveal.classList.add('btn-reveal-shine');
+
+      }
+
+      else if (phase === 'STAGE_2') {
+
+        // Grey out and disable everything except Round 2 Reveal
+
+        allLockable.forEach(el => {
+
+          el.disabled = true;
+
+          el.classList.add('opacity-25', 'pointer-events-none', 'cursor-not-allowed');
+
+        });
+
+        r2Reveal.disabled = false;
+
+        r2Reveal.classList.remove('opacity-25', 'pointer-events-none', 'cursor-not-allowed');
+
+        r2Reveal.classList.add('btn-reveal-shine');
+
+      }
+
+      else {
+
+        // Unlock all controls once Reveal is pressed (or in Lobby / Finale / Podium)
+
+        allLockable.forEach(el => {
+
+          el.disabled = false;
+
+          el.classList.remove('opacity-25', 'pointer-events-none', 'cursor-not-allowed');
+
+        });
+
+      }
+
+    }
+
     // --- SOUND EFFECTS ENGINE (Web Audio API) ---
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -330,9 +436,9 @@
 
       osc.connect(gain); gain.connect(audioCtx.destination);
 
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
 
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12);
 
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
 
@@ -498,7 +604,13 @@
 
       startTimer(45);
 
-      speak(`Round 1, Question ${s1Idx + 1}. Rank the options on your phones!`);
+      // Announce only at the start of Round 1 (Question 1)
+
+      if (s1Idx === 0) {
+
+        speak('Ho ho ho! Welcome to Round 1: Rapid Ranking! Rank the options on your phones!');
+
+      }
 
     }
 
@@ -509,8 +621,6 @@
       sendAction('REVEAL_STAGE_1');
 
       playRevealDing();
-
-      setTimeout(() => announceLeader(), 600);
 
     }
 
@@ -532,7 +642,13 @@
 
       startTimer(45);
 
-      speak(`Hivemind Question ${s2Idx + 1}. Type what everyone else is thinking!`);
+      // Announce only at the start of Round 2 (Question 1)
+
+      if (s2Idx === 0) {
+
+        speak('Ho ho ho! Round 2: The Hivemind! Type what everyone else is thinking!');
+
+      }
 
     }
 
@@ -543,8 +659,6 @@
       sendAction('CALCULATE_STAGE_2');
 
       playRevealDing();
-
-      setTimeout(() => announceLeader(), 600);
 
     }
 
@@ -566,7 +680,13 @@
 
       startTimer(45);
 
-      speak(`Final Showdown, Question ${s3Idx + 1}. Cast your votes now!`);
+      // Announce only at the start of Round 3 (Question 1)
+
+      if (s3Idx === 0) {
+
+        speak('Ho ho ho! It is time for the Final Showdown! Cast your votes for the finalists!');
+
+      }
 
     }
 
@@ -607,6 +727,10 @@
       document.getElementById('lobby-deck-badge').innerText =
 
         state.deck === 'day1' ? 'Day 1: Revenue & BI' : 'Day 2: Full Funnel Marketing';
+
+      // Apply button locking and Reveal spotlight based on live phase
+
+      updateControlLockState(state.phase);
 
       s1Idx = state.stage1Index;
 
