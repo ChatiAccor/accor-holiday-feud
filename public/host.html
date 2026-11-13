@@ -2,94 +2,188 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Accor Feud - Host Screen</title>
+<title>Accor Holiday Feud - Host Stage</title>
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+
+    @keyframes popIn {
+
+      0% { transform: scale(0.92) translateY(8px); opacity: 0; }
+
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+
+    }
+
+    .animate-pop { animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+</style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex flex-col font-sans select-none">
-<!-- Host Ribbon -->
-<header class="p-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2">
+<body class="bg-slate-950 text-white min-h-screen flex flex-col font-sans select-none overflow-x-hidden">
+<!-- Strike Overlay (Family Feud X) -->
+<div id="strike-overlay" class="hidden fixed inset-0 z-50 pointer-events-none flex items-center justify-center bg-red-950/30">
+<div class="text-[180px] font-black text-red-500 border-[14px] border-red-500 rounded-3xl px-14 py-2 bg-slate-950/90 shadow-[0_0_80px_rgba(239,68,68,0.8)] animate-bounce">
+
+      ✕
+</div>
+</div>
+<!-- Top Control Bar -->
+<header class="p-3 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center flex-wrap gap-2 shadow-lg">
 <div class="flex items-center gap-2">
 <span class="text-2xl">🏨🎄</span>
-<select id="deck-selector" onchange="switchDeck(this.value)" class="bg-slate-800 border border-slate-700 text-xs px-2 py-1 rounded font-bold text-amber-300">
+<select id="deck-selector" onchange="switchDeck(this.value)" class="bg-slate-800 border border-slate-700 text-xs px-2.5 py-1.5 rounded-lg font-bold text-amber-300 focus:outline-none">
 <option value="day1">Day 1: Revenue & BI</option>
 <option value="day2">Day 2: Full Funnel Marketing</option>
 </select>
+<button onclick="sendAction('START_LOBBY')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700">Lobby / Reset</button>
 </div>
-<!-- Stepper Controls -->
+<!-- Stage Steppers -->
 <div class="flex items-center gap-2 flex-wrap">
-<button onclick="sendAction('START_LOBBY')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded text-xs font-bold border border-slate-700">Lobby / Reset</button>
-<!-- Round 1: 7 Questions -->
-<div class="flex items-center bg-blue-950 border border-blue-800 rounded-lg px-2 py-0.5">
-<span class="text-xs font-bold text-blue-300 mr-1.5">Round 1:</span>
-<button onclick="stepS1(-1)" class="px-1 text-xs font-bold text-blue-200">◀</button>
+<!-- Round 1 -->
+<div class="flex items-center bg-blue-950/80 border border-blue-800 rounded-lg px-2 py-1">
+<span class="text-xs font-bold text-blue-300 mr-1.5">R1 Rank:</span>
+<button onclick="stepS1(-1)" class="px-1 text-xs font-bold text-blue-200 hover:text-white">◀</button>
 <span id="s1-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/7</span>
-<button onclick="stepS1(1)" class="px-1 text-xs font-bold text-blue-200">▶</button>
-<button onclick="startS1()" class="ml-1.5 px-2 py-0.5 bg-blue-600 rounded text-xs font-bold">Start</button>
-<button onclick="sendAction('REVEAL_STAGE_1')" class="ml-1 px-2 py-0.5 bg-blue-800 rounded text-xs font-bold">Reveal</button>
+<button onclick="stepS1(1)" class="px-1 text-xs font-bold text-blue-200 hover:text-white">▶</button>
+<button onclick="startS1()" class="ml-1.5 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-xs font-bold">Start</button>
+<button onclick="revealS1()" class="ml-1 px-2 py-0.5 bg-blue-800 hover:bg-blue-700 rounded text-xs font-bold">Reveal</button>
 </div>
-<!-- Round 2: 13 Questions -->
-<div class="flex items-center bg-emerald-950 border border-emerald-800 rounded-lg px-2 py-0.5">
-<span class="text-xs font-bold text-emerald-300 mr-1.5">Round 2:</span>
-<button onclick="stepS2(-1)" class="px-1 text-xs font-bold text-emerald-200">◀</button>
+<!-- Round 2 -->
+<div class="flex items-center bg-emerald-950/80 border border-emerald-800 rounded-lg px-2 py-1">
+<span class="text-xs font-bold text-emerald-300 mr-1.5">R2 Vote:</span>
+<button onclick="stepS2(-1)" class="px-1 text-xs font-bold text-emerald-200 hover:text-white">◀</button>
 <span id="s2-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/13</span>
-<button onclick="stepS2(1)" class="px-1 text-xs font-bold text-emerald-200">▶</button>
-<button onclick="startS2()" class="ml-1.5 px-2 py-0.5 bg-emerald-600 rounded text-xs font-bold">Start</button>
-<button onclick="sendAction('CALCULATE_STAGE_2')" class="ml-1 px-2 py-0.5 bg-emerald-800 rounded text-xs font-bold">Reveal</button>
+<button onclick="stepS2(1)" class="px-1 text-xs font-bold text-emerald-200 hover:text-white">▶</button>
+<button onclick="startS2()" class="ml-1.5 px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-bold">Start</button>
+<button onclick="revealS2()" class="ml-1 px-2 py-0.5 bg-emerald-800 hover:bg-emerald-700 rounded text-xs font-bold">Reveal</button>
 </div>
-<!-- Round 3: 3 Questions -->
-<div class="flex items-center bg-purple-950 border border-purple-800 rounded-lg px-2 py-0.5">
+<!-- Round 3 -->
+<div class="flex items-center bg-purple-950/80 border border-purple-800 rounded-lg px-2 py-1">
 <span class="text-xs font-bold text-purple-300 mr-1.5">Finale:</span>
-<button onclick="stepS3(-1)" class="px-1 text-xs font-bold text-purple-200">◀</button>
+<button onclick="stepS3(-1)" class="px-1 text-xs font-bold text-purple-200 hover:text-white">◀</button>
 <span id="s3-indicator" class="text-xs font-mono font-bold text-amber-300 px-1">Q 1/3</span>
-<button onclick="stepS3(1)" class="px-1 text-xs font-bold text-purple-200">▶</button>
-<button onclick="startS3()" class="ml-1.5 px-2 py-0.5 bg-purple-600 rounded text-xs font-bold">Start</button>
+<button onclick="stepS3(1)" class="px-1 text-xs font-bold text-purple-200 hover:text-white">▶</button>
+<button onclick="startS3()" class="ml-1.5 px-2 py-0.5 bg-purple-600 hover:bg-purple-500 rounded text-xs font-bold">Start</button>
 </div>
-<button onclick="sendAction('SHOW_PODIUM')" class="px-2.5 py-1 bg-amber-600 rounded text-xs font-black">🏆 Winner</button>
-<button onclick="exportCSV()" class="px-2 py-1 bg-slate-800 rounded text-xs font-bold border border-slate-700">Export CSV</button>
+</div>
+<!-- Spectacle & Audio Controls -->
+<div class="flex items-center gap-1.5 flex-wrap">
+<button id="btn-voice-toggle" onclick="toggleVoice()" class="px-2.5 py-1.5 bg-emerald-900/60 border border-emerald-700 text-emerald-300 rounded-lg text-xs font-bold">
+
+        🔊 Voice: ON
+</button>
+<button onclick="announceLeader()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-bold text-amber-300" title="Announce current #1 leader">
+
+        🎅 Announce #1
+</button>
+<button onclick="triggerStrike()" class="px-2.5 py-1.5 bg-red-900/70 hover:bg-red-800 border border-red-700 rounded-lg text-xs font-bold text-red-200" title="Family Feud Strike Buzzer">
+
+        ❌ Strike
+</button>
+<button onclick="triggerWinner()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-lg text-xs font-black shadow">
+
+        🏆 Podium
+</button>
+<button onclick="exportCSV()" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold border border-slate-700 text-slate-300">
+
+        CSV
+</button>
 </div>
 </header>
+<!-- Main Stage + Sidebar -->
 <main class="flex-1 p-6 grid grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
-<div class="col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-center items-center text-center">
+<!-- Main Presentation Stage -->
+<div class="col-span-2 bg-gradient-to-b from-slate-900 to-slate-900/70 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+<!-- Top Live Telemetry Bar (Timer + Submission Progress) -->
+<div id="stage-telemetry" class="hidden w-full space-y-2 mb-4">
+<div class="flex justify-between items-center text-xs font-bold">
+<div class="flex items-center gap-2">
+<span class="text-slate-400 uppercase tracking-wider">Answers Locked In:</span>
+<span id="submission-counter" class="text-emerald-400 font-mono text-sm">0 / 0</span>
+</div>
+<div class="flex items-center gap-2">
+<span id="timer-display" class="font-mono text-base font-black text-amber-400">45s</span>
+<button onclick="addTime(15)" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-[11px] text-slate-300">+15s</button>
+</div>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+<div id="submission-bar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-400 transition-all duration-300" style="width: 0%"></div>
+</div>
+</div>
+<!-- Center Content Container -->
+<div class="flex-1 flex flex-col justify-center items-center text-center">
 <!-- Lobby / QR -->
-<div id="view-lobby" class="space-y-4">
-<h2 class="text-3xl font-black text-amber-400">SCAN TO JOIN</h2>
-<div id="qrcode" class="p-4 bg-white rounded-2xl inline-block shadow-2xl"></div>
-<p class="text-slate-400 text-sm font-semibold">Visit <span class="text-amber-300 font-mono text-base" id="domain-url"></span></p>
+<div id="view-lobby" class="space-y-5 animate-pop">
+<div class="inline-block px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-widest" id="lobby-deck-badge">
+
+            Day 1: Revenue & BI
+</div>
+<h2 class="text-4xl font-black text-white tracking-tight">SCAN TO JOIN THE FEUD</h2>
+<div id="qrcode" class="p-4 bg-white rounded-2xl inline-block shadow-[0_0_50px_rgba(251,191,36,0.2)]"></div>
+<p class="text-slate-400 text-sm font-semibold">
+
+            Or visit <span class="text-amber-300 font-mono text-lg underline" id="domain-url"></span>
+</p>
 </div>
 <!-- Stage 1 View -->
-<div id="view-stage1" class="hidden w-full max-w-xl space-y-4">
-<span class="text-xs uppercase font-bold tracking-widest text-blue-400">Round 1: Rapid Ranking</span>
-<h2 id="s1-active-prompt" class="text-xl font-black text-white"></h2>
-<div id="stage1-reveal-list" class="space-y-2 mt-4"></div>
+<div id="view-stage1" class="hidden w-full max-w-2xl space-y-4">
+<span class="text-xs uppercase font-bold tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/60 px-3 py-1 rounded-full">Round 1: Rapid Ranking</span>
+<h2 id="s1-active-prompt" class="text-2xl font-black text-white leading-snug"></h2>
+<div id="stage1-reveal-list" class="space-y-2.5 mt-4 text-left"></div>
 </div>
 <!-- Stage 2 View -->
-<div id="view-stage2" class="hidden w-full max-w-xl space-y-4">
-<span class="text-xs uppercase font-bold tracking-widest text-emerald-400">Round 2: Public Voting (Hivemind)</span>
-<h2 id="s2-active-prompt" class="text-xl font-black text-white"></h2>
-<div id="stage2-reveal-list" class="space-y-2 mt-4"></div>
+<div id="view-stage2" class="hidden w-full max-w-2xl space-y-4">
+<span class="text-xs uppercase font-bold tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-3 py-1 rounded-full">Round 2: Public Voting (Hivemind)</span>
+<h2 id="s2-active-prompt" class="text-2xl font-black text-white leading-snug"></h2>
+<div id="stage2-reveal-list" class="space-y-2.5 mt-4 text-left"></div>
 </div>
 <!-- Stage 3 View -->
-<div id="view-stage3" class="hidden w-full max-w-xl space-y-4">
-<span class="text-xs uppercase font-bold tracking-widest text-purple-400">Round 3: Final Showdown</span>
-<h2 id="s3-active-prompt" class="text-xl font-black text-white"></h2>
-<div id="stage3-votes-list" class="space-y-2 mt-4"></div>
+<div id="view-stage3" class="hidden w-full max-w-2xl space-y-4">
+<span class="text-xs uppercase font-bold tracking-widest text-purple-400 bg-purple-950/80 border border-purple-800/60 px-3 py-1 rounded-full">Round 3: Final Showdown</span>
+<h2 id="s3-active-prompt" class="text-2xl font-black text-white leading-snug"></h2>
+<div id="stage3-votes-list" class="space-y-2.5 mt-4 text-left"></div>
 </div>
-<!-- Podium View -->
-<div id="view-podium" class="hidden w-full max-w-md space-y-4">
-<div class="text-7xl animate-bounce">🏆</div>
-<h2 class="text-4xl font-black text-amber-400">CHAMPION</h2>
-<div id="winner-name" class="text-3xl font-black text-white"></div>
+<!-- Podium View (Top 3 Olympic Style) -->
+<div id="view-podium" class="hidden w-full max-w-2xl space-y-6 animate-pop">
+<div>
+<div class="text-6xl mb-2">🎄🏆🎄</div>
+<h2 class="text-4xl font-black text-amber-400 tracking-wide">HOLIDAY CHAMPIONS</h2>
+</div>
+<div class="grid grid-cols-3 gap-4 items-end pt-4">
+<!-- 2nd Place -->
+<div class="bg-slate-800/90 border border-slate-600 rounded-t-2xl p-4 h-40 flex flex-col justify-between">
+<div class="text-2xl">🥈</div>
+<div id="podium-2-name" class="font-bold text-slate-200 truncate text-base">—</div>
+<div id="podium-2-score" class="text-xs font-mono text-slate-400">0 pts</div>
+</div>
+<!-- 1st Place -->
+<div class="bg-gradient-to-b from-amber-500/30 to-amber-900/30 border-2 border-amber-400 rounded-t-2xl p-4 h-52 flex flex-col justify-between shadow-[0_0_40px_rgba(251,191,36,0.3)]">
+<div class="text-4xl animate-bounce">👑</div>
+<div id="podium-1-name" class="font-black text-amber-300 truncate text-xl">—</div>
+<div id="podium-1-score" class="text-sm font-mono font-bold text-white">0 pts</div>
+</div>
+<!-- 3rd Place -->
+<div class="bg-slate-800/90 border border-amber-800/70 rounded-t-2xl p-4 h-32 flex flex-col justify-between">
+<div class="text-2xl">🥉</div>
+<div id="podium-3-name" class="font-bold text-amber-200/80 truncate text-base">—</div>
+<div id="podium-3-score" class="text-xs font-mono text-slate-400">0 pts</div>
 </div>
 </div>
-<!-- Leaderboard Sidebar -->
-<div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col">
-<h3 class="font-bold text-xs text-slate-400 uppercase tracking-widest mb-3 flex justify-between">
-<span>Leaderboard</span>
-<span id="player-count" class="text-amber-400">0 Checked In</span>
-</h3>
-<div id="leaderboard" class="flex-1 overflow-y-auto space-y-2 text-sm pr-1 max-h-[520px]"></div>
+</div>
+</div>
+</div>
+<!-- Live Leaderboard & Player Control Sidebar -->
+<div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col shadow-xl">
+<div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+<span class="font-bold text-xs text-slate-400 uppercase tracking-widest">Live Leaderboard</span>
+<span id="player-count" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-bold">
+
+          0 Players
+</span>
+</div>
+<div id="leaderboard" class="flex-1 overflow-y-auto space-y-1.5 text-sm pr-1 max-h-[540px]"></div>
 </div>
 </main>
 <script>
@@ -108,43 +202,259 @@
 
     let s3Idx = 0;
 
+    let voiceEnabled = true;
+
+    let timerInterval = null;
+
+    let timeLeft = 45;
+
     fetch('/api/questions').then(r => r.json()).then(q => cachedQuestions = q);
 
     new QRCode(document.getElementById("qrcode"), {
 
       text: window.location.origin,
 
-      width: 220,
+      width: 230,
 
-      height: 220
+      height: 230
 
     });
 
     document.getElementById("domain-url").innerText = window.location.origin;
 
+    // --- VOICE ANNOUNCER ENGINE (Santa / Game Show Host) ---
+
+    function speak(text) {
+
+      if (!voiceEnabled || !('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel();
+
+      const utter = new SpeechSynthesisUtterance(text);
+
+      const voices = window.speechSynthesis.getVoices();
+
+      const preferred = voices.find(v =>
+
+        v.name.includes('Google UK English Male') ||
+
+        v.name.includes('Daniel') ||
+
+        v.name.includes('Arthur') ||
+
+        (v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
+
+      );
+
+      if (preferred) utter.voice = preferred;
+
+      utter.pitch = 0.8;  // Deep festive Santa / Game Show tone
+
+      utter.rate = 0.96;  // Clear, energetic delivery
+
+      window.speechSynthesis.speak(utter);
+
+    }
+
+    if ('speechSynthesis' in window) {
+
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+
+    }
+
+    function toggleVoice() {
+
+      voiceEnabled = !voiceEnabled;
+
+      const btn = document.getElementById('btn-voice-toggle');
+
+      if (voiceEnabled) {
+
+        btn.innerText = '🔊 Voice: ON';
+
+        btn.className = 'px-2.5 py-1.5 bg-emerald-900/60 border border-emerald-700 text-emerald-300 rounded-lg text-xs font-bold';
+
+        speak('Ho ho ho! Voice announcer activated.');
+
+      } else {
+
+        window.speechSynthesis.cancel();
+
+        btn.innerText = '🔇 Voice: OFF';
+
+        btn.className = 'px-2.5 py-1.5 bg-slate-800 border border-slate-700 text-slate-400 rounded-lg text-xs font-bold';
+
+      }
+
+    }
+
+    function announceLeader() {
+
+      const sorted = Object.values(currentPlayers).sort((a, b) => b.score - a.score);
+
+      if (sorted.length === 0) {
+
+        speak('Ho ho ho! Waiting for players to scan the code and join the lobby!');
+
+        return;
+
+      }
+
+      const top = sorted[0];
+
+      const second = sorted[1];
+
+      if (second && top.score === second.score && top.score > 0) {
+
+        speak(`Ho ho ho! It's a tie at the top between ${top.name} and ${second.name} with ${top.score} points!`);
+
+      } else {
+
+        speak(`Number 1, ${top.name}, is in the lead with ${top.score} points! Ho ho ho!`);
+
+      }
+
+    }
+
+    // --- SOUND EFFECTS ENGINE (Web Audio API) ---
+
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function playDing() {
+    function playChime() {
 
       const osc = audioCtx.createOscillator();
 
       const gain = audioCtx.createGain();
 
+      osc.type = 'triangle';
+
       osc.connect(gain); gain.connect(audioCtx.destination);
 
-      osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
 
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12); // A5
 
-      osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
 
     }
+
+    function playRevealDing() {
+
+      [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+
+        const osc = audioCtx.createOscillator();
+
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+
+        osc.connect(gain); gain.connect(audioCtx.destination);
+
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.08);
+
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.08 + 0.45);
+
+        osc.start(audioCtx.currentTime + i * 0.08);
+
+        osc.stop(audioCtx.currentTime + i * 0.08 + 0.45);
+
+      });
+
+    }
+
+    function triggerStrike() {
+
+      const osc = audioCtx.createOscillator();
+
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sawtooth';
+
+      osc.connect(gain); gain.connect(audioCtx.destination);
+
+      osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+
+      osc.frequency.linearRampToValueAtTime(75, audioCtx.currentTime + 0.45);
+
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+
+      const overlay = document.getElementById('strike-overlay');
+
+      overlay.classList.remove('hidden');
+
+      setTimeout(() => overlay.classList.add('hidden'), 1100);
+
+    }
+
+    // --- COUNTDOWN TIMER ---
+
+    function startTimer(seconds = 45) {
+
+      clearInterval(timerInterval);
+
+      timeLeft = seconds;
+
+      updateTimerUI();
+
+      timerInterval = setInterval(() => {
+
+        timeLeft--;
+
+        updateTimerUI();
+
+        if (timeLeft <= 0) {
+
+          clearInterval(timerInterval);
+
+          playChime();
+
+        }
+
+      }, 1000);
+
+    }
+
+    function addTime(extra) {
+
+      timeLeft += extra;
+
+      updateTimerUI();
+
+    }
+
+    function stopTimer() {
+
+      clearInterval(timerInterval);
+
+    }
+
+    function updateTimerUI() {
+
+      const el = document.getElementById('timer-display');
+
+      el.innerText = `${timeLeft}s`;
+
+      el.className = timeLeft <= 10
+
+        ? 'font-mono text-base font-black text-red-400 animate-pulse'
+
+        : 'font-mono text-base font-black text-amber-400';
+
+    }
+
+    // --- HOST ACTIONS ---
 
     function sendAction(action, payload = {}) {
 
       socket.emit('host_action', { action, payload });
 
-      playDing();
+      playChime();
 
     }
 
@@ -152,7 +462,21 @@
 
       currentDeck = deck;
 
+      document.getElementById('lobby-deck-badge').innerText =
+
+        deck === 'day1' ? 'Day 1: Revenue & BI' : 'Day 2: Full Funnel Marketing';
+
       sendAction('SET_DECK', { deck });
+
+    }
+
+    function kickPlayer(playerId, name) {
+
+      if (confirm(`Remove "${name}" from the game?`)) {
+
+        sendAction('KICK_PLAYER', { playerId });
+
+      }
 
     }
 
@@ -168,7 +492,27 @@
 
     }
 
-    function startS1() { sendAction('SET_STAGE_1_QUESTION', { index: s1Idx }); }
+    function startS1() {
+
+      sendAction('SET_STAGE_1_QUESTION', { index: s1Idx });
+
+      startTimer(45);
+
+      speak(`Round 1, Question ${s1Idx + 1}. Rank the options on your phones!`);
+
+    }
+
+    function revealS1() {
+
+      stopTimer();
+
+      sendAction('REVEAL_STAGE_1');
+
+      playRevealDing();
+
+      setTimeout(() => announceLeader(), 600);
+
+    }
 
     function stepS2(delta) {
 
@@ -182,7 +526,27 @@
 
     }
 
-    function startS2() { sendAction('SET_STAGE_2_QUESTION', { index: s2Idx }); }
+    function startS2() {
+
+      sendAction('SET_STAGE_2_QUESTION', { index: s2Idx });
+
+      startTimer(45);
+
+      speak(`Hivemind Question ${s2Idx + 1}. Type what everyone else is thinking!`);
+
+    }
+
+    function revealS2() {
+
+      stopTimer();
+
+      sendAction('CALCULATE_STAGE_2');
+
+      playRevealDing();
+
+      setTimeout(() => announceLeader(), 600);
+
+    }
 
     function stepS3(delta) {
 
@@ -196,7 +560,41 @@
 
     }
 
-    function startS3() { sendAction('SET_STAGE_3_QUESTION', { index: s3Idx }); }
+    function startS3() {
+
+      sendAction('SET_STAGE_3_QUESTION', { index: s3Idx });
+
+      startTimer(45);
+
+      speak(`Final Showdown, Question ${s3Idx + 1}. Cast your votes now!`);
+
+    }
+
+    function triggerWinner() {
+
+      stopTimer();
+
+      sendAction('SHOW_PODIUM');
+
+      playRevealDing();
+
+      if (typeof confetti === 'function') {
+
+        confetti({ particleCount: 140, spread: 80, origin: { y: 0.6 } });
+
+      }
+
+      const sorted = Object.values(currentPlayers).sort((a, b) => b.score - a.score);
+
+      if (sorted[0]) {
+
+        speak(`Ho ho ho! Merry Christmas! Your Accor Holiday Feud champion is ${sorted[0].name} with ${sorted[0].score} points!`);
+
+      }
+
+    }
+
+    // --- STATE SYNC ---
 
     socket.on('state_sync', (state) => {
 
@@ -205,6 +603,10 @@
       currentDeck = state.deck;
 
       document.getElementById('deck-selector').value = state.deck;
+
+      document.getElementById('lobby-deck-badge').innerText =
+
+        state.deck === 'day1' ? 'Day 1: Revenue & BI' : 'Day 2: Full Funnel Marketing';
 
       s1Idx = state.stage1Index;
 
@@ -218,9 +620,35 @@
 
       document.getElementById('s3-indicator').innerText = `Q ${s3Idx + 1}/3`;
 
-      const list = Object.values(state.players).sort((a,b) => b.score - a.score);
+      const list = Object.values(state.players).sort((a, b) => b.score - a.score);
 
-      document.getElementById('player-count').innerText = `${list.length} Checked In`;
+      document.getElementById('player-count').innerText = `${list.length} Player${list.length === 1 ? '' : 's'}`;
+
+      // Live Submission Telemetry
+
+      const isVotingPhase = ['STAGE_1', 'STAGE_2', 'STAGE_3'].includes(state.phase);
+
+      const telemetryEl = document.getElementById('stage-telemetry');
+
+      if (isVotingPhase) {
+
+        telemetryEl.classList.remove('hidden');
+
+        const lockedCount = list.filter(p => p.locked).length;
+
+        const pct = list.length > 0 ? Math.round((lockedCount / list.length) * 100) : 0;
+
+        document.getElementById('submission-counter').innerText = `${lockedCount} / ${list.length} (${pct}%)`;
+
+        document.getElementById('submission-bar').style.width = `${pct}%`;
+
+      } else {
+
+        telemetryEl.classList.add('hidden');
+
+      }
+
+      // Render Leaderboard with Kick Button & Lock Indicator
 
       const lb = document.getElementById('leaderboard');
 
@@ -230,9 +658,29 @@
 
         const row = document.createElement('div');
 
-        row.className = 'flex justify-between items-center p-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-semibold';
+        row.className = 'group flex justify-between items-center p-2 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs font-semibold hover:border-slate-600 transition';
 
-        row.innerHTML = `<span class="truncate"><span class="text-slate-500 mr-2">#${idx+1}</span>${p.name}</span><span class="text-amber-400 font-bold">${p.score} pts</span>`;
+        const lockBadge = isVotingPhase
+
+          ? (p.locked ? '<span class="text-emerald-400 mr-1.5" title="Locked in">✓</span>' : '<span class="text-slate-600 mr-1.5">•</span>')
+
+          : '';
+
+        const medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `<span class="text-slate-500">#${idx + 1}</span>`;
+
+        row.innerHTML = `
+<div class="flex items-center truncate pr-2">
+<span class="w-6 inline-block text-center mr-1">${medal}</span>
+
+            ${lockBadge}
+<span class="truncate text-slate-100">${p.name}</span>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="text-amber-400 font-bold">${p.score} pts</span>
+<button onclick="kickPlayer('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="opacity-30 group-hover:opacity-100 px-1.5 py-0.5 rounded bg-red-950 hover:bg-red-700 text-red-300 hover:text-white transition" title="Remove player">✕</button>
+</div>
+
+        `;
 
         lb.appendChild(row);
 
@@ -241,6 +689,8 @@
       ['view-lobby', 'view-stage1', 'view-stage2', 'view-stage3', 'view-podium'].forEach(v => document.getElementById(v).classList.add('hidden'));
 
       if (state.phase === 'LOBBY') {
+
+        stopTimer();
 
         document.getElementById('view-lobby').classList.remove('hidden');
 
@@ -264,27 +714,27 @@
 
           if (state.phase === 'STAGE_1') {
 
-            // Show options on host screen while players vote
-
             q.items.forEach(item => {
 
               const d = document.createElement('div');
 
-              d.className = 'p-3 bg-slate-800/80 rounded-xl font-semibold border border-slate-700 text-slate-200 text-sm flex items-center gap-2';
+              d.className = 'p-3.5 bg-slate-800/80 rounded-xl font-semibold border border-slate-700 text-slate-200 text-sm flex items-center gap-3';
 
-              d.innerHTML = `<span class="text-blue-400 font-bold">◻</span> ${item.label}`;
+              d.innerHTML = `<span class="text-blue-400 font-bold">◻</span> <span>${item.label}</span>`;
 
               listEl.appendChild(d);
 
             });
 
-          } else if (state.phase === 'STAGE_1_REVEAL') {
+          } else {
 
-            q.revealStats.forEach(s => {
+            q.revealStats.forEach((s, i) => {
 
               const d = document.createElement('div');
 
-              d.className = 'p-3 bg-slate-800 rounded-xl font-bold border border-slate-700 text-amber-300 text-sm';
+              d.style.animationDelay = `${i * 80}ms`;
+
+              d.className = 'animate-pop p-3.5 bg-gradient-to-r from-blue-950 to-slate-800 rounded-xl font-bold border border-blue-500/40 text-amber-300 text-sm shadow';
 
               d.innerText = s;
 
@@ -316,17 +766,27 @@
 
           if (state.phase === 'STAGE_2_REVEAL') {
 
-            (state.clusters || []).forEach((c, idx) => {
+            if (!state.clusters || state.clusters.length === 0) {
 
-              const d = document.createElement('div');
+              listEl.innerHTML = '<div class="p-4 bg-slate-800 rounded-xl text-slate-400 text-sm text-center">No answers submitted this round.</div>';
 
-              d.className = 'p-3 bg-slate-800 rounded-xl flex justify-between font-bold border border-slate-700 text-emerald-300 text-sm';
+            } else {
 
-              d.innerHTML = `<span>#${idx+1} ${c.display}</span><span class="text-white">${c.count} Matches (+${c.count * 10} pts)</span>`;
+              state.clusters.forEach((c, idx) => {
 
-              listEl.appendChild(d);
+                const d = document.createElement('div');
 
-            });
+                d.style.animationDelay = `${idx * 90}ms`;
+
+                d.className = 'animate-pop p-3.5 bg-gradient-to-r from-emerald-950 to-slate-800 rounded-xl flex justify-between items-center font-bold border border-emerald-500/40 text-emerald-300 text-sm shadow';
+
+                d.innerHTML = `<span><span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded mr-2">#${idx + 1}</span>${c.display}</span><span class="text-white bg-slate-900/80 px-2.5 py-1 rounded-lg text-xs">${c.count} Match${c.count === 1 ? '' : 'es'} (+${c.count * 10} pts)</span>`;
+
+                listEl.appendChild(d);
+
+              });
+
+            }
 
           }
 
@@ -354,9 +814,9 @@
 
             const d = document.createElement('div');
 
-            d.className = 'p-3 bg-slate-800 rounded-xl flex justify-between font-bold border border-slate-700 text-purple-300 text-sm';
+            d.className = 'p-3.5 bg-gradient-to-r from-purple-950 to-slate-800 rounded-xl flex justify-between items-center font-bold border border-purple-500/40 text-purple-200 text-sm';
 
-            d.innerHTML = `<span>#${idx+1} ${f.name}</span><span class="text-amber-400">${f.votes || 0} Votes</span>`;
+            d.innerHTML = `<span>#${idx + 1} ${f.name}</span><span class="text-amber-400 bg-slate-900 px-3 py-1 rounded-lg">${f.votes || 0} Votes</span>`;
 
             box.appendChild(d);
 
@@ -370,7 +830,17 @@
 
         document.getElementById('view-podium').classList.remove('hidden');
 
-        if (list[0]) document.getElementById('winner-name').innerText = list[0].name;
+        document.getElementById('podium-1-name').innerText = list[0] ? list[0].name : '—';
+
+        document.getElementById('podium-1-score').innerText = list[0] ? `${list[0].score} pts` : '0 pts';
+
+        document.getElementById('podium-2-name').innerText = list[1] ? list[1].name : '—';
+
+        document.getElementById('podium-2-score').innerText = list[1] ? `${list[1].score} pts` : '0 pts';
+
+        document.getElementById('podium-3-name').innerText = list[2] ? list[2].name : '—';
+
+        document.getElementById('podium-3-score').innerText = list[2] ? `${list[2].score} pts` : '0 pts';
 
       }
 
@@ -380,7 +850,7 @@
 
       const rows = [["Rank", "Name", "Final Score"]];
 
-      Object.values(currentPlayers).sort((a,b) => b.score - a.score).forEach((p, idx) => {
+      Object.values(currentPlayers).sort((a, b) => b.score - a.score).forEach((p, idx) => {
 
         rows.push([idx + 1, `"${p.name}"`, p.score]);
 
@@ -392,7 +862,7 @@
 
       link.href = URL.createObjectURL(blob);
 
-      link.download = `Accor_Feud_${currentDeck}_${new Date().toISOString().slice(0,10)}.csv`;
+      link.download = `Accor_Feud_${currentDeck}_${new Date().toISOString().slice(0, 10)}.csv`;
 
       link.click();
 
