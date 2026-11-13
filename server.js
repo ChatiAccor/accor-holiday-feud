@@ -38,7 +38,7 @@ let gameState = {
 
   stage3Index: 0,
 
-  players: {}, // Keyed by persistent playerId
+  players: {},
 
   clusters: [],
 
@@ -106,8 +106,6 @@ function similarity(s1, s2) {
 
 io.on('connection', (socket) => {
 
-  // Persistent Join / Reconnect
-
   socket.on('player_join', ({ playerId, name }) => {
 
     if (!playerId) return;
@@ -126,7 +124,11 @@ io.on('connection', (socket) => {
 
         locked: false,
 
-        currentAnswer: null
+        currentAnswer: null,
+
+        lastPoints: 0,
+
+        lastBreakdown: ''
 
       };
 
@@ -139,8 +141,6 @@ io.on('connection', (socket) => {
     io.emit('state_sync', gameState);
 
   });
-
-  // Host Action Controls
 
   socket.on('host_action', ({ action, payload }) => {
 
@@ -180,11 +180,13 @@ io.on('connection', (socket) => {
 
         p.currentAnswer = null;
 
+        p.lastPoints = 0;
+
+        p.lastBreakdown = '';
+
       });
 
     }
-
-    // ROUND 1: RANKING
 
     else if (action === 'SET_STAGE_1_QUESTION') {
 
@@ -192,17 +194,33 @@ io.on('connection', (socket) => {
 
       gameState.phase = 'STAGE_1';
 
-      Object.values(gameState.players).forEach(p => { p.locked = false; p.currentAnswer = null; });
+      Object.values(gameState.players).forEach(p => {
+
+        p.locked = false;
+
+        p.currentAnswer = null;
+
+        p.lastPoints = 0;
+
+        p.lastBreakdown = '';
+
+      });
 
     }
 
     else if (action === 'REVEAL_STAGE_1') {
 
+      if (gameState.phase !== 'STAGE_1') return;
+
       const q = DECKS[gameState.deck].stage1[gameState.stage1Index];
 
-      Object.keys(gameState.players).forEach(id => {
+      Object.values(gameState.players).forEach(player => {
 
-        const player = gameState.players[id];
+        let earned = 0;
+
+        let exact = 0;
+
+        let close = 0;
 
         if (Array.isArray(player.currentAnswer)) {
 
@@ -210,21 +228,39 @@ io.on('connection', (socket) => {
 
             const correctIdx = q.correctOrder.indexOf(itemId);
 
-            if (correctIdx === idx) player.score += 20;
+            if (correctIdx === idx) {
 
-            else if (Math.abs(correctIdx - idx) === 1) player.score += 10;
+              earned += 20;
+
+              exact++;
+
+            } else if (Math.abs(correctIdx - idx) === 1) {
+
+              earned += 10;
+
+              close++;
+
+            }
 
           });
 
+          player.lastBreakdown = `${exact} exact spot${exact === 1 ? '' : 's'} (+${exact * 20}), ${close} off-by-one (+${close * 10})`;
+
+        } else {
+
+          player.lastBreakdown = 'No ranking locked in before the reveal.';
+
         }
+
+        player.score += earned;
+
+        player.lastPoints = earned;
 
       });
 
       gameState.phase = 'STAGE_1_REVEAL';
 
     }
-
-    // ROUND 2: HIVEMIND
 
     else if (action === 'SET_STAGE_2_QUESTION') {
 
@@ -234,21 +270,51 @@ io.on('connection', (socket) => {
 
       gameState.clusters = [];
 
-      Object.values(gameState.players).forEach(p => { p.locked = false; p.currentAnswer = null; });
+      Object.values(gameState.players).forEach(p => {
+
+        p.locked = false;
+
+        p.currentAnswer = null;
+
+        p.lastPoints = 0;
+
+        p.lastBreakdown = '';
+
+      });
 
     }
 
     else if (action === 'CALCULATE_STAGE_2') {
 
+      if (gameState.phase !== 'STAGE_2') return;
+
       const clusters = [];
 
       Object.values(gameState.players).forEach(p => {
 
-        if (!p.currentAnswer || typeof p.currentAnswer !== 'string') return;
+        p.lastPoints = 0;
+
+        if (!p.currentAnswer || typeof p.currentAnswer !== 'string') {
+
+          p.lastBreakdown = 'No answer submitted before the reveal.';
+
+          return;
+
+        }
+
+        p.lastBreakdown = `Your answer "${p.currentAnswer}" didn't make the Top 5 board.`;
 
         const clean = normalize(p.currentAnswer);
 
-        let match = clusters.find(c => similarity(c.text, clean) > 0.8 || clean.includes(c.text) || c.text.includes(clean));
+        let match = clusters.find(c =>
+
+          similarity(c.text, clean) > 0.8 ||
+
+          (clean.length > 2 && c.text.includes(clean)) ||
+
+          (c.text.length > 2 && clean.includes(c.text))
+
+        );
 
         if (match) {
 
@@ -266,23 +332,35 @@ io.on('connection', (socket) => {
 
       clusters.sort((a, b) => b.count - a.count);
 
-      clusters.forEach(c => {
+      const top5 = clusters.slice(0, 5);
 
-        if (c.count > 1) {
+      top5.forEach((c, rankIdx) => {
 
-          c.players.forEach(p => { p.score += c.count * 10; });
+        const pts = c.count * 10;
 
-        }
+        const others = c.count - 1;
+
+        c.players.forEach(p => {
+
+          p.score += pts;
+
+          p.lastPoints = pts;
+
+          p.lastBreakdown = others > 0
+
+            ? `#${rankIdx + 1} on the board! Matched "${c.display}" with ${others} colleague${others === 1 ? '' : 's'}.`
+
+            : `#${rankIdx + 1} on the board! ("${c.display}")`;
+
+        });
 
       });
 
-      gameState.clusters = clusters.slice(0, 5);
+      gameState.clusters = top5;
 
       gameState.phase = 'STAGE_2_REVEAL';
 
     }
-
-    // ROUND 3: FINALE
 
     else if (action === 'SET_STAGE_3_QUESTION') {
 
@@ -312,8 +390,6 @@ io.on('connection', (socket) => {
 
   });
 
-  // Submit Answer
-
   socket.on('submit_answer', (answer) => {
 
     const pId = socket.playerId;
@@ -329,8 +405,6 @@ io.on('connection', (socket) => {
     }
 
   });
-
-  // Vote for Finalist
 
   socket.on('vote_finalist', (finalistId) => {
 
@@ -361,8 +435,6 @@ io.on('connection', (socket) => {
     }
 
   });
-
-  // Do NOT delete players on disconnect so refreshes never lose scores
 
   socket.on('disconnect', () => {});
 
