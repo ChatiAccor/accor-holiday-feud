@@ -38,7 +38,7 @@ let gameState = {
 
   stage3Index: 0,
 
-  players: {},
+  players: {}, // Keyed by persistent playerId
 
   clusters: [],
 
@@ -64,7 +64,7 @@ function similarity(s1, s2) {
 
   let longer = s1.length < s2.length ? s2 : s1;
 
-  let shorter = s1.length < s2.length ? s2 : s1;
+  let shorter = s1.length < s2.length ? s1 : s2;
 
   if (longer.length === 0) return 1.0;
 
@@ -106,23 +106,41 @@ function similarity(s1, s2) {
 
 io.on('connection', (socket) => {
 
-  socket.on('player_join', ({ name }) => {
+  // Persistent Join / Reconnect
 
-    gameState.players[socket.id] = {
+  socket.on('player_join', ({ playerId, name }) => {
 
-      name: name.slice(0, 20),
+    if (!playerId) return;
 
-      score: 0,
+    socket.playerId = playerId;
 
-      locked: false,
+    if (!gameState.players[playerId]) {
 
-      currentAnswer: null
+      gameState.players[playerId] = {
 
-    };
+        id: playerId,
+
+        name: (name || 'Guest').slice(0, 20),
+
+        score: 0,
+
+        locked: false,
+
+        currentAnswer: null
+
+      };
+
+    } else if (name && name.trim()) {
+
+      gameState.players[playerId].name = name.slice(0, 20);
+
+    }
 
     io.emit('state_sync', gameState);
 
   });
+
+  // Host Action Controls
 
   socket.on('host_action', ({ action, payload }) => {
 
@@ -154,11 +172,19 @@ io.on('connection', (socket) => {
 
       gameState.finalists = [];
 
-      Object.values(gameState.players).forEach(p => { p.score = 0; p.locked = false; p.currentAnswer = null; });
+      Object.values(gameState.players).forEach(p => {
+
+        p.score = 0;
+
+        p.locked = false;
+
+        p.currentAnswer = null;
+
+      });
 
     }
 
-    // STAGE 1 (7 Questions)
+    // ROUND 1: RANKING
 
     else if (action === 'SET_STAGE_1_QUESTION') {
 
@@ -198,7 +224,7 @@ io.on('connection', (socket) => {
 
     }
 
-    // STAGE 2 (13 Questions)
+    // ROUND 2: HIVEMIND
 
     else if (action === 'SET_STAGE_2_QUESTION') {
 
@@ -256,7 +282,7 @@ io.on('connection', (socket) => {
 
     }
 
-    // STAGE 3 (3 Questions)
+    // ROUND 3: FINALE
 
     else if (action === 'SET_STAGE_3_QUESTION') {
 
@@ -286,47 +312,59 @@ io.on('connection', (socket) => {
 
   });
 
+  // Submit Answer
+
   socket.on('submit_answer', (answer) => {
 
-    if (gameState.players[socket.id]) {
+    const pId = socket.playerId;
 
-      gameState.players[socket.id].currentAnswer = answer;
+    if (pId && gameState.players[pId]) {
 
-      gameState.players[socket.id].locked = true;
+      gameState.players[pId].currentAnswer = answer;
+
+      gameState.players[pId].locked = true;
 
       io.emit('state_sync', gameState);
 
     }
 
   });
+
+  // Vote for Finalist
 
   socket.on('vote_finalist', (finalistId) => {
 
-    const f = gameState.finalists.find(x => x.id === finalistId);
+    const pId = socket.playerId;
 
-    if (f) {
+    if (!pId || !gameState.players[pId]) return;
 
-      f.votes = (f.votes || 0) + 1;
+    if (!gameState.players[pId].locked) {
 
-      if (gameState.players[finalistId]) {
+      const f = gameState.finalists.find(x => x.id === finalistId);
 
-        gameState.players[finalistId].score += 25;
+      if (f) {
+
+        f.votes = (f.votes || 0) + 1;
+
+        if (gameState.players[finalistId]) {
+
+          gameState.players[finalistId].score += 25;
+
+        }
+
+        gameState.players[pId].locked = true;
+
+        io.emit('state_sync', gameState);
 
       }
-
-      io.emit('state_sync', gameState);
 
     }
 
   });
 
-  socket.on('disconnect', () => {
+  // Do NOT delete players on disconnect so refreshes never lose scores
 
-    delete gameState.players[socket.id];
-
-    io.emit('state_sync', gameState);
-
-  });
+  socket.on('disconnect', () => {});
 
 });
 
@@ -338,4 +376,6 @@ app.get('/api/questions', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => console.log(`Accor Feud server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+Socket.IO
+ 
